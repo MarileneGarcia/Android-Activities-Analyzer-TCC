@@ -8,37 +8,35 @@
 
 using namespace std;
 
+/* The message of each log */
 typedef struct Events{
     string event;   
     Events* next; 
 } Events;
 
-class logFunctions { 
+/* Thread identificator */
+class Tid { 
     private:
-        string name;
+        int tid;
         Events* event_head;
         Events* event_tail; 
-        
-        /* thinking about pid and tid later
-        //int pid; 
-        //int tid; */
 
     public:           
-        logFunctions(string function) {     
-        name = function;
+        Tid(int tid) {     
+        this->tid = tid;
         event_head = NULL;
         event_tail = NULL;
         }
 
-        string get_name(){
-            return name;
+        int get_tid(){
+            return tid;
         }
 
-        void add_evento(string event) {
+        void add_event(string event) {
             if(event_head == NULL){
                 event_head = (Events*) malloc (sizeof(Events));
                 if(event_head == NULL) {
-                    cout << "Error to create a first event of Function: " + name << endl;
+                    cout << "Error to create a first event of tid: " + tid << endl;
                     exit(0);
                 }
                 event_head -> event = event;
@@ -47,7 +45,7 @@ class logFunctions {
             } else {
                 event_tail -> next = (Events*) malloc (sizeof(Events));
                 if(event_tail -> next == NULL) {
-                    cout << "Error to create an event of Function: " + name << endl;
+                    cout << "Error to create an event of tid: " + tid << endl;
                     exit(0);
                 }
                 event_tail -> next -> event = event;
@@ -65,77 +63,101 @@ class logFunctions {
         }
 };
 
-//vector<string> read_logs();
-vector<string> pick_functions();
-vector<string> read_functions();
-vector<logFunctions> select_functions(vector<string> functions);
+/* Process identificator */
+class Pid { 
+    private:
+        int pid;
+        vector<Tid> tids;
+
+    public:           
+        Pid(int pid) {     
+        this->pid = pid;
+        }
+
+        int get_pid(){
+            return pid;
+        }
+
+        void add_tid(int tid) {
+            tids.push_back(Tid(tid));
+        }
+
+        void print_all_tids(){
+            cout << "As threads referentes ao processo " << pid << "são: " << endl;
+
+            for(Tid tid : tids){
+                cout << tid.get_tid() << endl;
+            }
+        }
+};
+
+void managePids(string);
+vector<Pid> PidsList(string);
+bool PidDirectories(vector<Pid>);
 
 int main (){
-    //vector<string> lines = read_logs();
-    vector<string> functions = pick_functions();
-    select_functions(functions);
-    return 0;
+    managePids("logs.txt");
 }
 
-vector<string> read_logs(){
-    ifstream file;
-    string line;
-    vector<string> lines;
-    file.open("logs.txt");
-
-    if(file.is_open()){        
-        while(getline(file, line)){
-            lines.push_back(line);
-        }
-        file.close();
-        return lines;
+void managePids(string logFile){
+    vector<Pid> pids = PidsList(logFile);
+    if(PidDirectories(pids)){
+        cout << "Directories create with sucess!" << endl;
     } else {
-        cout << "Error to acess the logs data base" << endl;
+        cout << "Error: can not create pid directories" << endl;
         exit(0);
     }
+
 }
 
-vector<string> pick_functions(){
-    string str = "awk '{print (substr($6, length($6), 1) != \":\") ? $6 : substr($6, 1, length($6)-1) }' logs.txt | sort -u >> cellphone_functions.txt";
+vector<Pid> PidsList(string logFile){
+    string str = "awk '{print $3}' logs.txt | sort -u > pids.txt";
     const char *command = str.c_str();
-    system(command);
-    vector<string> functions = read_functions();
-    return functions;
-}
 
-vector<string> read_functions(){
-    ifstream file;
-    string function;
-    vector<string> functions;
-    file.open("cellphone_functions.txt");
-
-    if(file.is_open()){        
-        while(getline(file, function)){
-            functions.push_back(function);
-        }
-        file.close();
-        return functions;
-    } else {
-        cout << "Error to acess the functions data base" << endl;
+    //When system() return 0, everything goes well
+    if(system(command)){        
+        cout << "Error can not create a File with Pids list" << endl;
         exit(0);
+    } else {
+        ifstream file;
+        string line;
+        vector<Pid> pids;
+        file.open("pids.txt");
+
+        if(file.is_open()){        
+            while(getline(file, line)){
+                if(stoi(line)){
+                    pids.push_back(Pid(stoi(line)));
+                } else {
+                    cout << "Error: invalid format of some pids in a file: pids.txt" << endl;
+                    exit(0);
+                }    
+            }
+            file.close();
+            return pids;
+        } else {
+            cout << "Error: can not acess the pids file: pids.txt" << endl;
+            exit(0);
+        }
     }
 }
 
-vector<logFunctions> select_functions(vector<string> functions){
-    vector<logFunctions> events;
-    string selection;
-    int i = 0;
-    cout << "Type 'y' to select a function for analyze, or type 'n' to unselect the function" << endl;
-    for (string function : functions){
-        cout << "Do you want to analyse: \033[1;31m" + function + "\033[0m ?";
-        cin >> selection;
+bool PidDirectories(vector<Pid> pids){
+    string str = "mkdir Pids";
+    const char *command = str.c_str();
 
-        if(selection == "y"){
-            cout << "Do you wanna select" + function << endl;
-            events.push_back(logFunctions(function));
-            cout << events[i].get_name() << endl;
-            i++;
+    if(system(command)){        
+        cout << "Error: can not create a pids root directory" << endl;
+        exit(0);
+    } else {
+        for(Pid pid : pids){
+            str = "mkdir ./Pids/" + to_string(pid.get_pid());
+            command = str.c_str();
+            if(system(command)){        
+                cout << "Error: can not create a pid directory: "<< pid.get_pid() << endl;
+                exit(0);
+            }
         }
     }
-    return events;
+    return true;
 }
