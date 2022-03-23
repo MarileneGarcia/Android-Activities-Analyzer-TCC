@@ -5,6 +5,7 @@
 #include <fstream>
 #include <ctime>
 #include <cstdlib>
+#include <sstream> 
 
 using namespace std;
 
@@ -82,6 +83,10 @@ class Pid {
             tids.push_back(Tid(tid));
         }
 
+        vector<Tid> get_tids() {
+            return tids;
+        }
+
         void print_all_tids(){
             cout << "As threads referentes ao processo " << pid << "são: " << endl;
 
@@ -91,17 +96,18 @@ class Pid {
         }
 };
 
-void managePids(string);
-vector<Pid> PidsList(string);
-bool PidDirectories(vector<Pid>);
+void manageDirectories(string);
+vector<Pid> PidsTidsList(string);
+bool PidsTidsDirectories(vector<Pid>);
+vector<int> split(string, char);
 
 int main (){
-    managePids("logs.txt");
+    manageDirectories("logs.txt");
 }
 
-void managePids(string logFile){
-    vector<Pid> pids = PidsList(logFile);
-    if(PidDirectories(pids)){
+void manageDirectories(string logFile){
+    vector<Pid> pids = PidsTidsList(logFile);
+    if(PidsTidsDirectories(pids)){
         cout << "Directories create with sucess!" << endl;
     } else {
         cout << "Error: can not create pid directories" << endl;
@@ -110,8 +116,8 @@ void managePids(string logFile){
 
 }
 
-vector<Pid> PidsList(string logFile){
-    string str = "awk '{print $3}' logs.txt | sort -u > pids.txt";
+vector<Pid> PidsTidsList(string logFile){
+    string str = "awk '{print $3\" \"$4}' logs.txt | sort -u > pids.txt";
     const char *command = str.c_str();
 
     //When system() return 0, everything goes well
@@ -122,12 +128,21 @@ vector<Pid> PidsList(string logFile){
         ifstream file;
         string line;
         vector<Pid> pids;
+        vector<int> pid_tid;
         file.open("pids.txt");
 
         if(file.is_open()){        
             while(getline(file, line)){
-                if(stoi(line)){
-                    pids.push_back(Pid(stoi(line)));
+                pid_tid = split(line, ' ');
+                if(pid_tid[0]){
+                    if(!pids.empty()){
+                        if(pids.back().get_pid() != pid_tid[0]){
+                            pids.push_back(Pid(pid_tid[0]));
+                        }
+                    } else{
+                        pids.push_back(Pid(pid_tid[0]));
+                    }
+                pids.back().add_tid(pid_tid[1]);
                 } else {
                     cout << "Error: invalid format of some pids in a file: pids.txt" << endl;
                     exit(0);
@@ -142,7 +157,7 @@ vector<Pid> PidsList(string logFile){
     }
 }
 
-bool PidDirectories(vector<Pid> pids){
+bool PidsTidsDirectories(vector<Pid> pids){
     string str = "mkdir Pids";
     const char *command = str.c_str();
 
@@ -157,7 +172,28 @@ bool PidDirectories(vector<Pid> pids){
                 cout << "Error: can not create a pid directory: "<< pid.get_pid() << endl;
                 exit(0);
             }
+
+            for(Tid tid : pid.get_tids()){
+                str = "mkdir ./Pids/" + to_string(pid.get_pid()) + "/" + to_string(tid.get_tid());
+                command = str.c_str();
+                if(system(command)){         
+                    cout << "Error: can not create a tid subdirectory: "<< tid.get_tid() << "of a pid directory: "<< pid.get_pid()  << endl;
+                    exit(0);
+                }
+            }
         }
     }
     return true;
 }
+
+vector<int> split(string str, char delimiter) { 
+  vector<int> value; 
+  stringstream ss(str); 
+  string number; 
+ 
+  while(getline(ss, number, delimiter)) { 
+    value.push_back(stoi(number)); 
+  } 
+ 
+  return value; 
+} 
