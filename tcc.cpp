@@ -1,105 +1,4 @@
-#include <iostream>
-#include <string>
-#include <map>
-#include <vector>
-#include <fstream>
-#include <ctime>
-#include <cstdlib>
-#include <sstream> 
-
-using namespace std;
-
-/* The message of each log */
-typedef struct Events{
-    string event;   
-    Events* next; 
-} Events;
-
-/* Thread identificator */
-class Tid { 
-    private:
-        int tid;
-        Events* event_head;
-        Events* event_tail; 
-
-    public:           
-        Tid(int tid) {     
-        this->tid = tid;
-        event_head = NULL;
-        event_tail = NULL;
-        }
-
-        int get_tid(){
-            return tid;
-        }
-
-        void add_event(string event) {
-            if(event_head == NULL){
-                event_head = (Events*) malloc (sizeof(Events));
-                if(event_head == NULL) {
-                    cout << "Error to create a first event of tid: " + tid << endl;
-                    exit(0);
-                }
-                event_head -> event = event;
-                event_head -> next = NULL;
-                event_tail = event_head;
-            } else {
-                event_tail -> next = (Events*) malloc (sizeof(Events));
-                if(event_tail -> next == NULL) {
-                    cout << "Error to create an event of tid: " + tid << endl;
-                    exit(0);
-                }
-                event_tail -> next -> event = event;
-                event_tail -> next -> next = NULL;
-                event_tail = event_tail -> next;
-            }
-        }
-
-        void print_all_events(){
-            int i = 0;
-            while (event_tail -> next != NULL){
-                cout << "Message " << i << ": " << event_tail -> event << endl; 
-                i++;
-            }
-        }
-};
-
-/* Process identificator */
-class Pid { 
-    private:
-        int pid;
-        vector<Tid> tids;
-
-    public:           
-        Pid(int pid) {     
-        this->pid = pid;
-        }
-
-        int get_pid(){
-            return pid;
-        }
-
-        void add_tid(int tid) {
-            tids.push_back(Tid(tid));
-        }
-
-        vector<Tid> get_tids() {
-            return tids;
-        }
-
-        void print_all_tids(){
-            cout << "As threads referentes ao processo " << pid << "são: " << endl;
-
-            for(Tid tid : tids){
-                cout << tid.get_tid() << endl;
-            }
-        }
-};
-
-void manageDirectories(string);
-vector<Pid> PidsTidsList(string);
-bool PidsTidsDirectories(vector<Pid>);
-vector<int> split(string, char);
+#include "tcc.h"
 
 int main (){
     manageDirectories("logs.txt");
@@ -107,13 +6,13 @@ int main (){
 
 void manageDirectories(string logFile){
     vector<Pid> pids = PidsTidsList(logFile);
-    if(PidsTidsDirectories(pids)){
+    if(PidsTidsDirectories(pids, logFile)){
         cout << "Directories create with sucess!" << endl;
     } else {
         cout << "Error: can not create pid directories" << endl;
         exit(0);
     }
-
+    TidFunctions(pids);
 }
 
 vector<Pid> PidsTidsList(string logFile){
@@ -157,8 +56,9 @@ vector<Pid> PidsTidsList(string logFile){
     }
 }
 
-bool PidsTidsDirectories(vector<Pid> pids){
+bool PidsTidsDirectories(vector<Pid> pids, string log_file){
     string str = "mkdir Pids";
+    string grep, pid_id, tid_id;
     const char *command = str.c_str();
 
     if(system(command)){        
@@ -166,19 +66,36 @@ bool PidsTidsDirectories(vector<Pid> pids){
         exit(0);
     } else {
         for(Pid pid : pids){
-            str = "mkdir ./Pids/" + to_string(pid.get_pid());
+            pid_id = to_string(pid.get_pid());
+            str = "mkdir ./Pids/" + pid_id;
             command = str.c_str();
             if(system(command)){        
                 cout << "Error: can not create a pid directory: "<< pid.get_pid() << endl;
                 exit(0);
+            } else {
+                grep = "grep ' " + pid_id + " ' " + log_file + " > ./Pids/" + pid_id + "/" + pid_id + ".txt";
+                command = grep.c_str();
+                if(system(command)){        
+                    cout << "Error: can not create a pid file: "<< pid.get_pid() << endl;
+                    exit(0);
+                }
             }
 
             for(Tid tid : pid.get_tids()){
-                str = "mkdir ./Pids/" + to_string(pid.get_pid()) + "/" + to_string(tid.get_tid());
+                tid_id = to_string(tid.get_tid());
+                str = "mkdir ./Pids/" + pid_id + "/" + tid_id;
                 command = str.c_str();
                 if(system(command)){         
                     cout << "Error: can not create a tid subdirectory: "<< tid.get_tid() << "of a pid directory: "<< pid.get_pid()  << endl;
                     exit(0);
+                }
+                else {
+                    grep = "grep ' " + tid_id + " ' " + "./Pids/" + pid_id + "/" + pid_id + ".txt" + " > ./Pids/" + pid_id + "/" + tid_id + "/" + tid_id + ".txt";
+                    command = grep.c_str();
+                    if(system(command)){        
+                        cout << "Error: can not create a pid file: "<< pid.get_pid() << endl;
+                        exit(0);
+                    }
                 }
             }
         }
@@ -196,4 +113,59 @@ vector<int> split(string str, char delimiter) {
   } 
  
   return value; 
-} 
+}
+
+bool TidFunctions(vector<Pid> pids){
+    string str, dir, grep, pid_id, tid_id;
+    const char *command;
+    vector<string> functions;
+    for(Pid pid : pids){
+        pid_id = to_string(pid.get_pid());
+        for(Tid tid : pid.get_tids()){
+            tid_id = to_string(tid.get_tid());
+            dir = "./Pids/" + pid_id + "/" + tid_id + "/";
+            functions = pick_functions(dir, tid_id);
+            for (string function : functions){
+                str = "mkdir " + dir + function;
+                command = str.c_str();
+                if(system(command)){         
+                    cout << "Error: can not create a function subdirectory: "<< dir << function << endl;
+                    //exit(0);
+                } else {
+                    grep = "grep" + dir + function + "/" + function + ".txt";
+                }
+            }
+        }
+    }
+}
+
+vector<string> pick_functions(string dir, string tid_id){
+    string str = "awk '{print (substr($6, length($6), 1) != \":\") ? $6 : substr($6, 1, length($6)-1) }' " + dir + tid_id + ".txt" + "| sort -u > " + dir + "functions.txt";
+    const char *command = str.c_str();
+    if(system(command)){         
+        cout << "Error: can not select funcions of: "<< dir << tid_id << ".txt" << endl;
+        exit(0);
+    }
+    else {
+        vector<string> functions = read_functions(dir);
+        return functions;
+    }
+}
+
+vector<string> read_functions(string dir){
+    ifstream file;
+    string function;
+    vector<string> functions;
+    file.open(dir+"functions.txt");
+
+    if(file.is_open()){        
+        while(getline(file, function)){
+            functions.push_back(function);
+        }
+        file.close();
+        return functions;
+    } else {
+        cout << "Error to acess the functions data base of: " << dir <<"functions.txt" << endl;
+        exit(0);
+    }
+}
