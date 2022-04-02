@@ -100,6 +100,7 @@ void manageDirectories(string);
 vector<Pid> PidsTidsList(string);
 bool PidsTidsDirectories(vector<Pid>, string);
 bool TidFunctions(vector<Pid>);
-vector<int> split(string, char);
+vector<int> split_number(string, char);
+string split_character(string, char);
 vector<string> pick_functions(string, string);
 vector<string> read_functions(string);

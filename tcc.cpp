@@ -32,7 +32,7 @@ vector<Pid> PidsTidsList(string logFile){
 
         if(file.is_open()){        
             while(getline(file, line)){
-                pid_tid = split(line, ' ');
+                pid_tid = split_number(line, ' ');
                 if(pid_tid[0]){
                     if(!pids.empty()){
                         if(pids.back().get_pid() != pid_tid[0]){
@@ -103,7 +103,7 @@ bool PidsTidsDirectories(vector<Pid> pids, string log_file){
     return true;
 }
 
-vector<int> split(string str, char delimiter) { 
+vector<int> split_number(string str, char delimiter) { 
   vector<int> value; 
   stringstream ss(str); 
   string number; 
@@ -130,9 +130,16 @@ bool TidFunctions(vector<Pid> pids){
                 command = str.c_str();
                 if(system(command)){         
                     cout << "Error: can not create a function subdirectory: "<< dir << function << endl;
-                    //exit(0);
+                    exit(0);
                 } else {
-                    grep = "grep" + dir + function + "/" + function + ".txt";
+                    grep = "grep " + function + " " + dir + tid_id + ".txt > " + dir + function + "/" + function + ".txt";
+                    cout << grep << endl;
+                    command = grep.c_str();
+
+                    if(system(command)){         
+                    cout << "Error: can not create a function file: "<< dir << function << function << ".txt" << endl;
+                    exit(0);
+                    }
                 }
             }
         }
@@ -155,27 +162,30 @@ vector<string> pick_functions(string dir, string tid_id){
 vector<string> read_functions(string dir){
     ifstream file;
     string function;
-    string directory = dir+"functions.txt";
     vector<string> functions;
+    file.open(dir+"functions.txt");
 
-    string str = "sed \'s/\\//_/g\' " + directory + " > " + dir + "functionsFile.txt";
-    const char *command = str.c_str();
-    if(system(command)){         
-        cout << "Error: can not replace caracter '/' to a caracter '_' in file " << directory << endl;
-        exit(0);
-    } else {
-        directory = dir+"functionsFile.txt";
-    }
-
-    file.open(directory);
     if(file.is_open()){        
         while(getline(file, function)){
+            if (function.find('/') != string::npos){
+                function = split_character(function, '/');
+            }
             functions.push_back(function);
         }
         file.close();
         return functions;
     } else {
-        cout << "Error to acess the functions data base of: " << directory << endl;
+        cout << "Error to acess the functions data base of: " << dir <<"functions.txt" << endl;
         exit(0);
     }
+}
+
+string split_character (string str, char delimiter) { 
+  vector<string> value; 
+  stringstream ss(str); 
+  string character; 
+  while(getline(ss, character, delimiter)) { 
+    value.push_back(character); 
+  } 
+  return value.at(0); 
 }
