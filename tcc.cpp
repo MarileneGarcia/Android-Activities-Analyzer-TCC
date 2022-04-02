@@ -155,9 +155,19 @@ vector<string> pick_functions(string dir, string tid_id){
 vector<string> read_functions(string dir){
     ifstream file;
     string function;
+    string directory = dir+"functions.txt";
     vector<string> functions;
-    file.open(dir+"functions.txt");
 
+    string str = "sed \'s/\\//_/g\' " + directory + " > " + dir + "functionsFile.txt";
+    const char *command = str.c_str();
+    if(system(command)){         
+        cout << "Error: can not replace caracter '/' to a caracter '_' in file " << directory << endl;
+        exit(0);
+    } else {
+        directory = dir+"functionsFile.txt";
+    }
+
+    file.open(directory);
     if(file.is_open()){        
         while(getline(file, function)){
             functions.push_back(function);
@@ -165,7 +175,7 @@ vector<string> read_functions(string dir){
         file.close();
         return functions;
     } else {
-        cout << "Error to acess the functions data base of: " << dir <<"functions.txt" << endl;
+        cout << "Error to acess the functions data base of: " << directory << endl;
         exit(0);
     }
 }
