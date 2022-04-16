@@ -1,22 +1,90 @@
 #include "tcc.h"
+#ifdef TCC_H
 
-int main (){
-    manageDirectories("logs.txt");
+int main (int argc, char *argv[]){
+    string dir = "";
+
+    switch (stoi(argv[2])){
+        case 1:
+            dir = dir + argv[3] + "/";
+            dir = CheckPath(dir);
+            break;
+        
+        case 2:
+            dir = dir + argv[3] + "/";
+            dir = CheckPath(dir);
+            break;
+    }
 }
 
-void manageDirectories(string logFile){
-    vector<Pid> pids = PidsTidsList(logFile);
-    if(PidsTidsDirectories(pids, logFile)){
+/**
+ * CheckPath
+ * 
+ * Check a path, if not exist, it is created
+ * @param  {string} dir: path
+ * @return {string} dir: path
+ */
+string CheckPath(string dir){
+    if(isDirectoryExist(dir)){
+        cout << "\npath " << dir << " already exists" << endl;
+    } else {
+        string str = "mkdir " + dir;
+        const char *command = str.c_str();
+        
+        if(system(command)){        
+            cout << "\nprogram error: Can not create a path: " << dir << endl;
+            exit(0);
+        } else {
+            cout << "\n" << "path " << dir << "was created" << endl;
+        }
+    }
+    return dir;
+}
+
+/**
+ * CheckDirectory
+ * 
+ * Check if the directory exist, and return 
+ * true or false
+ * @param  {string} str: path of directory
+ * @return {bool} true or false
+ */
+bool CheckDirectory(const string &str){
+  struct stat buffer;
+  return (stat (str.c_str(), &buffer) == 0);
+}
+
+/**
+ * FileOrganization
+ * 
+ * Create the entire file organization for
+ * pids, tids and functions of a log file 
+ * @param  {string} logs: file with logs
+ * @return {bool} if everything goes well
+ */
+bool FileOrganization(string logs){
+    vector<Pid> pids = allPids(logs);
+    if(PidsTidsDirectories(pids, logs)){
         cout << "Directories create with sucess!" << endl;
     } else {
         cout << "Error: can not create pid directories" << endl;
         exit(0);
     }
-    TidFunctions(pids);
+    
+    //?TidFunctions(pids);
 }
 
-vector<Pid> PidsTidsList(string logFile){
-    string str = "awk '{print $3\" \"$4}' logs.txt | sort -n -k 1 -u > pids.txt";
+/**
+ * allPids
+ * 
+ * Extract all pids of logs 
+ * @param  {string} logs: path of logs
+ * @return {vector<Pid>} pids: a vector 
+ * with all pids
+ */
+vector<Pid> allPids(string logs){
+    string pid_path 
+    string str = "awk '{print $3\" \"$4}'" + logs + "| sort -n -k 1 -u > pids.txt";
     const char *command = str.c_str();
 
     //When system() return 0, everything goes well
@@ -200,3 +268,36 @@ vector<string> split_character (string str, char delimiter) {
   } 
   return value; 
 }
+
+/**
+ * GetStdoutFromCommand
+ * 
+ * Capture the output of a linux command
+ * Implementation for:
+ * https://www.jeremymorgan.com/tutorials/c-programming/how-to-capture-the-output-of-a-linux-command-in-c/ 
+ * 
+ * @param  {string} cmd: linux command
+ * @return {string} pids: output of linux command
+ * with all pids
+ */
+string GetStdoutFromCommand(string data) {
+  string data;
+  FILE * stream;
+  const int max_buffer = 256;
+  char buffer[max_buffer];
+  cmd.append(" 2>&1");
+
+  stream = popen(cmd.c_str(), "r");
+
+  if (stream) {
+    while (!feof(stream))
+      if (fgets(buffer, max_buffer, stream) != NULL) data.append(buffer);
+    pclose(stream);
+  }
+  return data;
+}
+
+
+#else
+cout << "Some problems were found to execute the program" << endl;
+#endif

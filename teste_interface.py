@@ -11,11 +11,8 @@ window.title("Android Activities Analyzer")
 #greeting.pack(fill="both")
 logo = tk.PhotoImage(file="logo.png")
 #w1 = logo.subsample(int(screen_width/30), int(screen_width/30))
-w2 = tk.Label(window, image=logo).pack(side="top")
-
-
-w2 = tk.Label(window,justify=tk.LEFT,padx = 10, text="explanation").pack(side="top", anchor = 'center')
-
+w2 = tk.Label(window, image=logo).pack(side="top", anchor = 'nw')
+w2 = tk.Label(window,padx = 5, text="explanation").pack(side="top")
 window.configure(background="#86acac")
 label = tk.Label(text="Hello, Tkinter", fg="black", font = "Verdana 10 bold", bg="#86acac")
 #label.pack()

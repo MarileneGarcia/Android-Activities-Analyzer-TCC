@@ -1,3 +1,7 @@
+#pragma once
+#ifndef TCC_H
+#define TCC_H
+
 #include <iostream>
 #include <string>
 #include <map>
@@ -7,6 +11,7 @@
 #include <cstdlib>
 #include <sstream> 
 #include <regex>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -80,7 +85,17 @@ class Pid {
         }
 };
 
-void manageDirectories(string);
+/** Functions related to the four initial steps **/
+string CheckPath(string);
+bool CheckDirectory(const string &);
+/** ******************************************* **/
+
+
+/** Functions related to register activities **/
+
+/** **************************************** **/
+bool InitialOrganization(string);
+bool createDirectories(string);
 vector<Pid> PidsTidsList(string);
 bool PidsTidsDirectories(vector<Pid>, string);
 bool TidFunctions(vector<Pid>);
@@ -88,3 +103,5 @@ vector<int> split_number(string, char);
 vector<string> split_character(string, char);
 vector<string> pick_functions(string, string);
 vector<string> read_functions(string, string);
+
+#endif
