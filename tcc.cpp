@@ -16,7 +16,7 @@ void manageDirectories(string logFile){
 }
 
 vector<Pid> PidsTidsList(string logFile){
-    string str = "awk '{print $3\" \"$4}' logs.txt | sort -u > pids.txt";
+    string str = "awk '{print $3\" \"$4}' logs.txt | sort -n -k 1 -u > pids.txt";
     const char *command = str.c_str();
 
     //When system() return 0, everything goes well
@@ -125,22 +125,8 @@ bool TidFunctions(vector<Pid> pids){
             tid_id = to_string(tid.get_tid());
             dir = "./Pids/" + pid_id + "/" + tid_id + "/";
             functions = pick_functions(dir, tid_id);
-            for (string function : functions){
-                str = "mkdir " + dir + function;
-                command = str.c_str();
-                if(system(command)){         
-                    cout << "Error: can not create a function subdirectory: "<< dir << function << endl;
-                    exit(0);
-                } else {
-                    grep = "grep " + function + " " + dir + tid_id + ".txt > " + dir + function + "/" + function + ".txt";
-                    cout << grep << endl;
-                    command = grep.c_str();
-
-                    if(system(command)){         
-                    cout << "Error: can not create a function file: "<< dir << function << function << ".txt" << endl;
-                    exit(0);
-                    }
-                }
+            for(string function : functions){
+                tid.add_function(function);
             }
         }
     }
@@ -154,21 +140,46 @@ vector<string> pick_functions(string dir, string tid_id){
         exit(0);
     }
     else {
-        vector<string> functions = read_functions(dir);
+        vector<string> functions = read_functions(dir, tid_id);
         return functions;
     }
 }
 
-vector<string> read_functions(string dir){
+vector<string> read_functions(string dir, string tid_id){
     ifstream file;
-    string function;
-    vector<string> functions;
+    string function, function_aux, str;
+    const char *command;
+    vector<string> functions, vec_name;
     file.open(dir+"functions.txt");
 
     if(file.is_open()){        
         while(getline(file, function)){
             if (function.find('/') != string::npos){
-                function = split_character(function, '/');
+                vec_name = split_character(function, '/');
+                function_aux = "";
+                for(string name : vec_name){
+                    function_aux = function_aux + "_" + name;
+                }
+            } else if (!regex_match(function,regex("^[a-zA-Z0-9_.-]*$"))) {
+                function_aux = function;
+                function_aux = regex_replace(function_aux, regex("[^0-9a-zA-Z]+"), "");
+            } else {
+                function_aux = function;
+            }
+            str = "mkdir " + dir + function_aux;
+            command = str.c_str();
+            if(system(command)){         
+                cout << "Error: can not create a function subdirectory: "<< dir << function << endl;
+                exit(0);
+            } else {
+                str = "grep " + function + " " + dir + tid_id + ".txt > " + dir + function_aux + "/" + function_aux + ".txt";
+                cout << str << endl;
+                command = str.c_str();
+
+                if(system(command)){         
+                cout << "Error: can not create a function file: "<< dir << function_aux << function_aux << ".txt" << endl;
+                exit(0);
+                }
             }
             functions.push_back(function);
         }
@@ -180,12 +191,12 @@ vector<string> read_functions(string dir){
     }
 }
 
-string split_character (string str, char delimiter) { 
+vector<string> split_character (string str, char delimiter) { 
   vector<string> value; 
   stringstream ss(str); 
   string character; 
   while(getline(ss, character, delimiter)) { 
     value.push_back(character); 
   } 
-  return value.at(0); 
+  return value; 
 }

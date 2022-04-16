@@ -6,6 +6,7 @@
 #include <ctime>
 #include <cstdlib>
 #include <sstream> 
+#include <regex>
 
 using namespace std;
 
@@ -19,47 +20,30 @@ typedef struct Message{
 class Tid { 
     private:
         int tid;
-        Message* msg_head;
-        Message* msg_tail; 
+        vector<string> functions;
 
     public:           
         Tid(int tid) {     
         this->tid = tid;
-        msg_head = NULL;
-        msg_tail = NULL;
         }
 
         int get_tid(){
             return tid;
         }
 
-        void add_message(string message) {
-            if(msg_head == NULL){
-                msg_head = (Message*) malloc (sizeof(Message));
-                if(msg_head == NULL) {
-                    cout << "Error to create a first message of tid: " + tid << endl;
-                    exit(0);
-                }
-                msg_head -> message = message;
-                msg_head -> next = NULL;
-                msg_tail = msg_head;
-            } else {
-                msg_tail -> next = (Message*) malloc (sizeof(Message));
-                if(msg_tail -> next == NULL) {
-                    cout << "Error to create an message of tid: " + tid << endl;
-                    exit(0);
-                }
-                msg_tail -> next -> message = message;
-                msg_tail -> next -> next = NULL;
-                msg_tail = msg_tail -> next;
-            }
+        void add_function(string function) {
+            functions.push_back(function);
         }
 
-        void print_all_messages(){
-            int i = 0;
-            while (msg_tail -> next != NULL){
-                cout << "Message " << i << ": " << msg_tail -> message << endl; 
-                i++;
+        vector<string> get_functions() {
+            return functions;
+        }
+
+        void print_all_functions(){
+            cout << "The functions related to the thread" << tid << "are: " << endl;
+
+            for(string function : functions){
+                cout << function << endl;
             }
         }
 };
@@ -88,7 +72,7 @@ class Pid {
         }
 
         void print_all_tids(){
-            cout << "As threads referentes ao processo " << pid << "são: " << endl;
+            cout << "The threads related to the process " << pid << "are: " << endl;
 
             for(Tid tid : tids){
                 cout << tid.get_tid() << endl;
@@ -101,6 +85,6 @@ vector<Pid> PidsTidsList(string);
 bool PidsTidsDirectories(vector<Pid>, string);
 bool TidFunctions(vector<Pid>);
 vector<int> split_number(string, char);
-string split_character(string, char);
+vector<string> split_character(string, char);
 vector<string> pick_functions(string, string);
-vector<string> read_functions(string);
+vector<string> read_functions(string, string);
