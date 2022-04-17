@@ -85,16 +85,26 @@ class Pid {
         }
 };
 
+/** Auxiliar Functions **/
+bool WriteFile(string, string);
+string GetStdoutFromCommand(string);
+/** ****************** **/
+
+/** The first function executed when initialized **/
+bool ProgramBegin();
+/** ******************************************** **/
+
 /** Functions related to the four initial steps **/
-string CheckPath(string);
-bool CheckDirectory(const string &);
+void CheckPath(string);
+bool IsPathExist(const string &);
 /** ******************************************* **/
 
 
 /** Functions related to register activities **/
-
+void FileOrganization(string);
+vector<Pid> allPids(string);
 /** **************************************** **/
-bool InitialOrganization(string);
+void InitialOrganization(string);
 bool createDirectories(string);
 vector<Pid> PidsTidsList(string);
 bool PidsTidsDirectories(vector<Pid>, string);

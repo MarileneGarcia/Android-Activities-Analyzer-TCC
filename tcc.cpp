@@ -5,15 +5,63 @@ int main (int argc, char *argv[]){
     string dir = "";
 
     switch (stoi(argv[2])){
+        case 0:
+            if(!ProgramBegin()){
+                cout << "program error: PANIC the program can not begin" << endl;
+            }
+            break;
+
         case 1:
             dir = dir + argv[3] + "/";
-            dir = CheckPath(dir);
+            CheckPath(dir);
             break;
         
         case 2:
-            dir = dir + argv[3] + "/";
-            dir = CheckPath(dir);
+            dir = dir + argv[3];
+            FileOrganization(dir);
             break;
+    }
+}
+
+/**
+ * ProgramBegin
+ * 
+ * The begining of a program, a file "logs_exe.txt"
+ * will be create with all code execution of the program
+ * running for a one action
+ * @param  {} 
+ * @return {bool} true or false
+ */
+bool ProgramBegin(){
+    string str = "echo \"program sucess: begining..\"  > ../config/logs_exe.txt";
+    const char *command = str.c_str();
+    
+    if(system(command)){        
+        cout << "program error: Can not initialize " << endl;
+        return false;
+    } else {
+        cout << "program sucess: beginning completed" << endl;
+        return true;
+    }
+}
+
+/**
+ * WriteFile
+ * 
+ * write in a file
+ * @param  {string} file: path of the file 
+ * @param  {string} message: the message to be write 
+ * @return {bool} true or false
+ */
+bool WriteFile(string file, string message){
+        ofstream myfile;
+        myfile.open (file);
+    if (myfile.is_open()){
+        myfile << message << endl;
+        myfile.close();
+        return true;
+    } else {
+        return false;
     }
 }
 
@@ -22,23 +70,23 @@ int main (int argc, char *argv[]){
  * 
  * Check a path, if not exist, it is created
  * @param  {string} dir: path
- * @return {string} dir: path
+ * @return {} 
  */
-string CheckPath(string dir){
-    if(isDirectoryExist(dir)){
-        cout << "\npath " << dir << " already exists" << endl;
+void CheckPath(string dir){
+    if(IsPathExist(dir)){
+        cout << "program sucess: path " << dir << " already exists" << endl;
     } else {
         string str = "mkdir " + dir;
         const char *command = str.c_str();
         
         if(system(command)){        
-            cout << "\nprogram error: Can not create a path: " << dir << endl;
+            cout << "program error: Can not create a path: " << dir << endl;
+            cout << "program exit" << endl;
             exit(0);
         } else {
-            cout << "\n" << "path " << dir << "was created" << endl;
+            cout << "program sucess: path " << dir << "was created" << endl;
         }
     }
-    return dir;
 }
 
 /**
@@ -46,10 +94,13 @@ string CheckPath(string dir){
  * 
  * Check if the directory exist, and return 
  * true or false
+ * Implementation for:
+ * https://www.systutorials.com/how-to-test-a-file-or-directory-exists-in-c/
+ * 
  * @param  {string} str: path of directory
  * @return {bool} true or false
  */
-bool CheckDirectory(const string &str){
+bool IsPathExist(const string &str){
   struct stat buffer;
   return (stat (str.c_str(), &buffer) == 0);
 }
@@ -60,16 +111,17 @@ bool CheckDirectory(const string &str){
  * Create the entire file organization for
  * pids, tids and functions of a log file 
  * @param  {string} logs: file with logs
- * @return {bool} if everything goes well
+ * @return {}
  */
-bool FileOrganization(string logs){
+void FileOrganization(string logs){
     vector<Pid> pids = allPids(logs);
-    if(PidsTidsDirectories(pids, logs)){
-        cout << "Directories create with sucess!" << endl;
+    /*if(PidsTidsDirectories(pids, logs)){
+        cout << "program sucess: pids directories created with sucess" << endl;
     } else {
-        cout << "Error: can not create pid directories" << endl;
+        cout << "program error: can not create pids directories" << endl;
+        cout << "program exit" << endl;
         exit(0);
-    }
+    }*/
     
     //?TidFunctions(pids);
 }
@@ -77,26 +129,28 @@ bool FileOrganization(string logs){
 /**
  * allPids
  * 
- * Extract all pids of logs 
+ * Extract all pids of logs and create a class
+ * for each pid, and the list with the tids class
+ * that refer to this pid
  * @param  {string} logs: path of logs
  * @return {vector<Pid>} pids: a vector 
  * with all pids
  */
 vector<Pid> allPids(string logs){
-    string pid_path 
-    string str = "awk '{print $3\" \"$4}'" + logs + "| sort -n -k 1 -u > pids.txt";
+    string pid_path = "../config/pids/pids.txt";
+    string str = "awk '{print $3\" \"$4}' " + logs + " | sort -n -k 1 -u > " + pid_path;
     const char *command = str.c_str();
 
     //When system() return 0, everything goes well
     if(system(command)){        
-        cout << "Error can not create a File with Pids list" << endl;
+        cout << "program error: can not create a file with pids list" << endl;
         exit(0);
     } else {
         ifstream file;
         string line;
         vector<Pid> pids;
         vector<int> pid_tid;
-        file.open("pids.txt");
+        file.open(pid_path);
 
         if(file.is_open()){        
             while(getline(file, line)){
@@ -111,14 +165,16 @@ vector<Pid> allPids(string logs){
                     }
                 pids.back().add_tid(pid_tid[1]);
                 } else {
-                    cout << "Error: invalid format of some pids in a file: pids.txt" << endl;
+                    cout << "program error: invalid format of some pids in a file: pids.txt" << endl;
+                    cout << "program exit" << endl;
                     exit(0);
                 }    
             }
             file.close();
             return pids;
         } else {
-            cout << "Error: can not acess the pids file: pids.txt" << endl;
+            cout << "program error: can not acess the pids file: pids.txt" << endl;
+            cout << "program exit" << endl;
             exit(0);
         }
     }
@@ -280,7 +336,7 @@ vector<string> split_character (string str, char delimiter) {
  * @return {string} pids: output of linux command
  * with all pids
  */
-string GetStdoutFromCommand(string data) {
+string GetStdoutFromCommand(string cmd) {
   string data;
   FILE * stream;
   const int max_buffer = 256;
