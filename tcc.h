@@ -45,7 +45,7 @@ class Tid {
         }
 
         void print_all_functions(){
-            cout << "The functions related to the thread" << tid << "are: " << endl;
+            cout << "The functions related to the thread" << tid << " are: " << endl;
 
             for(string function : functions){
                 cout << function << endl;
@@ -77,7 +77,7 @@ class Pid {
         }
 
         void print_all_tids(){
-            cout << "The threads related to the process " << pid << "are: " << endl;
+            cout << "The threads related to the process " << pid << " are: " << endl;
 
             for(Tid tid : tids){
                 cout << tid.get_tid() << endl;
@@ -88,6 +88,7 @@ class Pid {
 /** Auxiliar Functions **/
 bool WriteFile(string, string);
 string GetStdoutFromCommand(string);
+void printPids(vector<Pid>);
 /** ****************** **/
 
 /** The first function executed when initialized **/
@@ -99,19 +100,17 @@ void CheckPath(string);
 bool IsPathExist(const string &);
 /** ******************************************* **/
 
-
-/** Functions related to register activities **/
+/** Functions related to mapped all actvities of a log file **/
 void FileOrganization(string);
 vector<Pid> allPids(string);
-/** **************************************** **/
+vector<int> split_number(string, char);
 void InitialOrganization(string);
 bool createDirectories(string);
 vector<Pid> PidsTidsList(string);
 bool PidsTidsDirectories(vector<Pid>, string);
 bool TidFunctions(vector<Pid>);
-vector<int> split_number(string, char);
 vector<string> split_character(string, char);
 vector<string> pick_functions(string, string);
-vector<string> read_functions(string, string);
-
+vector<string> FunctionsDirectory(string, string);
+/** ******************************************************* **/
 #endif
