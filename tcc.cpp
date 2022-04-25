@@ -3,8 +3,7 @@
 
 int main (int argc, char *argv[]){
     string str = "";
-
-    switch (stoi(argv[2])){
+    switch (stoi(argv[1])){
         case 0:
             if(!ProgramBegin()){
                 cout << "program error: PANIC the program can not begin" << endl;
@@ -14,12 +13,12 @@ int main (int argc, char *argv[]){
             break;
 
         case 1:
-            str = str + argv[3] + "/";
+            str = str + argv[2];
             CheckPath(str);
             break;
         
         case 2:
-            str = str + argv[3];
+            str = str + argv[2];
             FileOrganization(str);
             break;
     }
@@ -88,7 +87,8 @@ bool WriteFile(string file, string message){
  * @param  {string} dir: path
  * @return {} 
  */
-void CheckPath(string dir){
+void CheckPath(string str){
+    string dir = "../config/activities/" + str;
     if(IsPathExist(dir)){
         cout << "program sucess: path " << dir << " already exists" << endl;
     } else {
