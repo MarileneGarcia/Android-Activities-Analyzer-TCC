@@ -18,7 +18,7 @@ int main (int argc, char *argv[]){
             break;
         
         case 2:
-            str = str + argv[2];
+            str = "../config/logs.txt";
             FileOrganization(str);
             break;
     }
@@ -141,7 +141,7 @@ void FileOrganization(string logs){
     if(TidFunctions(pids)){
         cout << "program sucess: all function directories created with sucess" << endl;
     } else {
-        cout << "program error: can not create pids directories" << endl;
+        cout << "program error: can not create function directories" << endl;
         cout << "program exit" << endl;
         exit(0);
     }
@@ -298,6 +298,7 @@ bool TidFunctions(vector<Pid> pids){
             }
         }
     }
+    return true;
 }
 
 /**
