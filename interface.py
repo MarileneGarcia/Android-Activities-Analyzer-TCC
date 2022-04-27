@@ -7,6 +7,7 @@ from tkinter import filedialog
 from shutil import copy
 import os
 import time
+import traceback
 
 # 1. Building First Screen and Root
 root = Tk()
@@ -201,7 +202,7 @@ def sixth_screen (root, old_frame, user_choices):
 def finish_program (root, old_frame):
     old_frame.destroy()
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
-    frame.grid(row = 0, column = 0, columnspan = 2, sticky = tk.NSEW)
+    frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
     frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, weight=1)
     frame.grid_columnconfigure(2, weight=1)
@@ -254,14 +255,15 @@ def open_file(root, frame):
                 messagebox.showerror('pop-up error', str(output))
                 print(str(output))
             else:
-                pb.destroy()
                 frame.update_idletasks()
                 pb['value'] += 20
+                time.sleep(1)
+                pb.destroy()
                 label = Label(frame, text='File Uploaded Successfully!', font = ("Courier", 10), background="#86acac")
                 label.grid(row = 4, column = 0, pady=10)
-                time.sleep(1)
                 finish_program(root, frame)
-        except:
+        except Exception: 
+                traceback.print_exc()
                 #must need to handle with the error, finish the program
                 print(str(output))
                 messagebox.showerror('pop-up error', "program error: Can not create a path: ../config/logs.txt\nprogram exit" )
@@ -269,13 +271,6 @@ def open_file(root, frame):
 
 def finish(root, frame):
     root.destroy()
-    command = "./saida.out 0"
-    stream = os.popen(command)
-    output = stream.read()
-    if "program error" in output:
-        #must need to handle with the error, finish the program
-        messagebox.showerror('pop-up error', str(output))
-        print(str(output))
 
 # Execute Tkinter
 root.mainloop()
