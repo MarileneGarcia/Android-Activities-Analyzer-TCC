@@ -3,6 +3,7 @@
 
 int main (int argc, char *argv[]){
     string str = "";
+    vector<Pid> pids = {};
     switch (stoi(argv[1])){
         case 0:
             if(!ProgramBegin()){
@@ -19,8 +20,34 @@ int main (int argc, char *argv[]){
         
         case 2:
             str = "../config/logs.txt";
-            FileOrganization(str);
+            pids = FileOrganization(str);
+            if (!pids.empty())
+                CreateFileAllInformation(pids);
+            else {
+                cout << "program error: PANIC the program can not acess the log information" << endl;
+                cout << "program exit" << endl;
+                exit(0);
+            }
             break;
+        
+        case 3:
+            str = str + argv[2];
+            if (!CreateActivityDirectory(str)){
+                cout << "program error: activity already registered" << endl;
+                cout << "program exit" << endl;
+                exit(0);
+            }
+            break;
+
+        case 4:
+            str = str + argv[2];
+            if (!CreateOtherWayActivity(str)){
+                cout << "program error: the other way to same activity can not registered" << endl;
+                cout << "program exit" << endl;
+                exit(0);
+            }
+            break;
+
     }
 }
 
@@ -100,7 +127,7 @@ void CheckPath(string str){
             cout << "program exit" << endl;
             exit(0);
         } else {
-            cout << "program sucess: path " << dir << "was created" << endl;
+            cout << "program sucess: path " << dir << " was created" << endl;
         }
     }
 }
@@ -129,7 +156,7 @@ bool IsPathExist(const string &str){
  * @param  {string} logs: psth of log file
  * @return {}
  */
-void FileOrganization(string logs){
+vector<Pid> FileOrganization(string logs){
     vector<Pid> pids = allPids(logs);
     if(PidsTidsDirectories(pids, logs)){
         cout << "program sucess: pids and tid directories created with sucess" << endl;
@@ -145,6 +172,7 @@ void FileOrganization(string logs){
         cout << "program exit" << endl;
         exit(0);
     }
+    return pids;
 }
 
 /**
@@ -158,6 +186,7 @@ void FileOrganization(string logs){
  * with all pids
  */
 vector<Pid> allPids(string logs){
+    vector<Pid> pids;
     string pid_path = "../config/pids/pids.txt";
     string str = "awk '{print $3\" \"$4}' " + logs + " | sort -u | sort -n -k 1 > " + pid_path;
     const char *command = str.c_str();
@@ -169,7 +198,6 @@ vector<Pid> allPids(string logs){
     } else {
         ifstream file;
         string line;
-        vector<Pid> pids;
         vector<int> pid_tid;
         file.open(pid_path);
 
@@ -229,12 +257,12 @@ vector<int> split_number(string str, char delimiter) {
  * @param  {string} log_file: path of logs
  * @return {bool} true or false  
  */
-bool PidsTidsDirectories(vector<Pid> pids, string log_file){
+bool PidsTidsDirectories(vector<Pid>& pids, string log_file){
     string dir = "../config/pids/";
     string str, grep, pid_id, tid_id;
     const char *command;
 
-    for(Pid pid : pids){
+    for(Pid& pid : pids){
         pid_id = to_string(pid.get_pid());
         str = "mkdir " + dir + pid_id;
         command = str.c_str();
@@ -252,7 +280,7 @@ bool PidsTidsDirectories(vector<Pid> pids, string log_file){
             }
         }
 
-        for(Tid tid : pid.get_tids()){
+        for(Tid& tid : pid.get_tids()){
             tid_id = to_string(tid.get_tid());
             str = "mkdir " + dir + pid_id + "/" + tid_id;
             command = str.c_str();
@@ -283,13 +311,13 @@ bool PidsTidsDirectories(vector<Pid> pids, string log_file){
  * @param  {pids} vector of pids
  * @return {bool} true or false  
  */
-bool TidFunctions(vector<Pid> pids){
+bool TidFunctions(vector<Pid>& pids){
     string str, dir, grep, pid_id, tid_id;
     const char *command;
     vector<string> functions;
-    for(Pid pid : pids){
+    for(Pid& pid : pids){
         pid_id = to_string(pid.get_pid());
-        for(Tid tid : pid.get_tids()){
+        for(Tid& tid : pid.get_tids()){
             tid_id = to_string(tid.get_tid());
             dir = "../config/pids/" + pid_id + "/" + tid_id + "/";
             functions = pick_functions(dir, tid_id);
@@ -356,20 +384,12 @@ vector<string> FunctionsDirectory(string dir, string tid_id){
             }
             str = "mkdir " + dir + function_aux;
             command = str.c_str();
-            if(system(command)){         
-                cout << "program error: can not create a function subdirectory: "<< dir << function << endl;
-                cout << "program exit" << endl;
-                exit(0);
-            } else {
-                str = "grep " + function + " " + dir + tid_id + ".txt > " + dir + function_aux + "/" + function_aux + ".txt";
-                command = str.c_str();
-
-                if(system(command)){ 
-                cout << "program exit" << endl;        
-                cout << "program error: can not create a function file: "<< dir << function_aux << function_aux << ".txt" << endl;
-                exit(0);
-                }
-            }
+            apply_command(command);
+            
+            str = "grep " + function + " " + dir + tid_id + ".txt > " + dir + function_aux + "/" + function_aux + ".txt";
+            command = str.c_str();
+            apply_command(command);
+            
             functions.push_back(function);
         }
         file.close();
@@ -440,6 +460,85 @@ void printPids(vector<Pid> pids){
         cout << "para o pid :" << aux.get_pid() << endl;
         aux.print_all_tids();
         cout << endl; 
+    }
+}
+
+/**
+ * CreateFileAllInformation
+ * 
+ * Create a text file with all organizations
+ * pid, tid and function. So, the interface can 
+ * acess this and facilite the user choices pids
+ * @param  {vector<Pid>} pid vector
+ * @return {} 
+ */
+void CreateFileAllInformation(vector<Pid>& pids){
+    ofstream file("info_file.txt");
+    for(Pid pid : pids){
+        file << pid.get_pid() << ":" << endl;
+        for(Tid tid: pid.get_tids()){
+            file << "  " << tid.get_tid()<< ":" << endl;
+            for(string function : tid.get_functions()){
+                 file << "    " << function << endl;
+            }
+        }
+    }
+    file.close();
+}
+
+/**
+ * CreateActivityDirectory
+ * 
+ * Create a directory for the new activity 
+ * if it does not exist
+ * @param  {string} the path of new activity
+ * @return {} 
+ */
+bool CreateActivityDirectory(string dir){
+    if(!IsPathExist(dir)){
+        string str = "mkdir " + dir;
+        const char *command = str.c_str();
+        apply_command(command);
+
+        str = "mkdir " + dir + "/way_0";
+        command = str.c_str();
+        apply_command(command);
+        
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * CreateOtherWayActivity
+ * 
+ * Create a directory for other way to same
+ * activity
+ * @param  {string} the path of activity
+ * @return {} 
+ */
+bool CreateOtherWayActivity(string dir){
+    if(IsPathExist(dir)){
+        string str = "ls -l " + dir + " | grep ^d | wc -l ";
+        str = GetStdoutFromCommand(str);
+
+        str = "mkdir " + dir + "/way_" + str;
+        const char *command = str.c_str();
+        command = str.c_str();
+        apply_command(command);
+        
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void apply_command(const char *command){
+    if(system(command)){        
+        cout << "program error: Can not apply the command: " << command << endl;
+        cout << "program exit" << endl;
+        exit(0);
     }
 }
 

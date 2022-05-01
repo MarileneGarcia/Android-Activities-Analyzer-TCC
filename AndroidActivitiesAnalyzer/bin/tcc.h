@@ -40,12 +40,12 @@ class Tid {
             functions.push_back(function);
         }
 
-        vector<string> get_functions() {
+        vector<string>& get_functions() {
             return functions;
         }
 
         void print_all_functions(){
-            cout << "The functions related to the thread" << tid << " are: " << endl;
+            cout << "The functions related to the thread " << tid << " are: " << endl;
 
             for(string function : functions){
                 cout << function << endl;
@@ -72,7 +72,7 @@ class Pid {
             tids.push_back(Tid(tid));
         }
 
-        vector<Tid> get_tids() {
+        vector<Tid>& get_tids() {
             return tids;
         }
 
@@ -86,6 +86,7 @@ class Pid {
 };
 
 /** Auxiliar Functions **/
+void apply_command(const char *);
 bool WriteFile(string, string);
 string GetStdoutFromCommand(string);
 void printPids(vector<Pid>);
@@ -101,16 +102,21 @@ bool IsPathExist(const string &);
 /** ******************************************* **/
 
 /** Functions related to mapped all actvities of a log file **/
-void FileOrganization(string);
+vector<Pid> FileOrganization(string);
 vector<Pid> allPids(string);
 vector<int> split_number(string, char);
 void InitialOrganization(string);
 bool createDirectories(string);
 vector<Pid> PidsTidsList(string);
-bool PidsTidsDirectories(vector<Pid>, string);
-bool TidFunctions(vector<Pid>);
+bool PidsTidsDirectories(vector<Pid>&, string);
+bool TidFunctions(vector<Pid>&);
 vector<string> split_character(string, char);
 vector<string> pick_functions(string, string);
 vector<string> FunctionsDirectory(string, string);
 /** ******************************************************* **/
+
+void CreateFileAllInformation(vector<Pid>&);
+bool CreateActivityDirectory(string);
+bool CreateOtherWayActivity(string);
+
 #endif
