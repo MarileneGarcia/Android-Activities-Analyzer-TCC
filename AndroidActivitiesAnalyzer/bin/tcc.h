@@ -118,5 +118,6 @@ vector<string> FunctionsDirectory(string, string);
 void CreateFileAllInformation(vector<Pid>&);
 bool CreateActivityDirectory(string);
 bool CreateOtherWayActivity(string);
+bool RegisterActivity(string, string);
 
 #endif

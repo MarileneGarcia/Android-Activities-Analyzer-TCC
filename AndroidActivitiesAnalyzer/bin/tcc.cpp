@@ -2,7 +2,7 @@
 #ifdef TCC_H
 
 int main (int argc, char *argv[]){
-    string str = "";
+    string str = "", str_dir = "";
     vector<Pid> pids = {};
     switch (stoi(argv[1])){
         case 0:
@@ -19,7 +19,7 @@ int main (int argc, char *argv[]){
             break;
         
         case 2:
-            str = "../config/logs.txt";
+            str = "../config/pids/logs.txt";
             pids = FileOrganization(str);
             if (!pids.empty())
                 CreateFileAllInformation(pids);
@@ -46,6 +46,12 @@ int main (int argc, char *argv[]){
                 cout << "program exit" << endl;
                 exit(0);
             }
+            break;
+        
+        case 5:
+            str = str + argv[2];
+            str_dir = str_dir + argv[3];
+            RegisterActivity(str, str_dir);
             break;
 
     }
@@ -531,6 +537,65 @@ bool CreateOtherWayActivity(string dir){
         return true;
     } else {
         return false;
+    }
+}
+
+/**
+ * RegisterActivity
+ * 
+ * 
+ * @param  {string} 
+ * @return {} 
+ */
+bool RegisterActivity(string pids_number, string dir){
+    string str = "ls -l ../config/pids/ | grep ^d | rev | cut -d \" \" -f 1 | rev";
+    vector<int> all_pids = split_number(GetStdoutFromCommand(str),'\n');
+    vector<int> choose_pids = split_number(pids_number, ',');
+    vector<int> tids;
+    const char *command;
+    sort(all_pids.begin(), all_pids.end());
+    sort(choose_pids.begin(), choose_pids.end());
+
+    int i = 0,j = 0;
+    while (i < all_pids.size()){
+        if(j == choose_pids.size() || all_pids[i] != choose_pids[j]){
+            str = "rm -rf ../config/pids/" + to_string(all_pids[i]);
+            command = str.c_str();
+            apply_command(command);
+            i++;
+        } else {
+            i++;
+            j++;
+        } 
+    }
+
+    str = "cp -a ../config/pids/. " + dir;
+    command = str.c_str();
+    apply_command(command);
+
+    for(j = 0; j < choose_pids.size(); j++){
+        str = "mv " + dir + to_string(choose_pids[j]) + " " + dir + "process_" + to_string(j);
+        command = str.c_str();
+        apply_command(command);
+
+        str = "tr -s \" \" < " + dir + "/process_" + to_string(j) + "/" + to_string(choose_pids[j]) + ".txt | cut -d \" \" -f 5- > " 
+        + dir + "/process_" + to_string(j) + "/process_" + to_string(j) + ".txt && rm -f " + dir + "/process_" + to_string(j) + "/" + to_string(choose_pids[j]) + ".txt";
+        command = str.c_str();
+        apply_command(command);
+
+        str = "ls -l " + dir + "/process_" + to_string(j) + "/" + " | grep ^d | rev | cut -d \" \" -f 1 | rev";
+        tids = split_number(GetStdoutFromCommand(str),'\n');
+
+        for(i = 0; i < tids.size(); i++){
+            str = "mv " + dir + "process_" + to_string(j) + "/" + to_string(tids[i]) + " " + dir + "process_" + to_string(j) + "/thread_" + to_string(i);
+            command = str.c_str();
+            apply_command(command);
+
+            str = "tr -s \" \" < " + dir + "/process_" + to_string(j) + "/" "thread_" + to_string(i) + "/" + to_string(tids[i]) + ".txt | cut -d \" \" -f 5- > " + dir + "/process_" 
+            + to_string(j) + "/" "thread_" + to_string(i) + "/" + "thread_" + to_string(i) + ".txt && rm -f " + dir + "/process_" + to_string(j) + "/" "thread_" + to_string(i) + "/" + to_string(tids[i]) + ".txt";
+            command = str.c_str();
+            apply_command(command);
+        }
     }
 }
 
