@@ -479,13 +479,26 @@ void printPids(vector<Pid> pids){
  * @return {} 
  */
 void CreateFileAllInformation(vector<Pid>& pids){
-    ofstream file("info_file.txt");
+    int flag = 0;
+    ofstream file("../config/pids/info_file.txt");
     for(Pid pid : pids){
-        file << pid.get_pid() << ":" << endl;
+        file << ">" << pid.get_pid() << ": ";
         for(Tid tid: pid.get_tids()){
-            file << "  " << tid.get_tid()<< ":" << endl;
-            for(string function : tid.get_functions()){
-                 file << "    " << function << endl;
+            file << "[" << tid.get_tid()<< ": ";
+            vector<string> it = tid.get_functions();
+            vector<string>::iterator ptr;
+            flag = 0;
+            for(ptr = it.begin(); ptr < it.end(); ptr++){
+                flag += 1;
+                if(flag >= 2 && ptr != it.end()-1){
+                    file << endl;
+                    flag = 0;
+                }
+                if(ptr != it.end()-1){
+                    file << *ptr << ",";
+                } else {
+                    file << *ptr << "]" << endl;
+                }       
             }
         }
     }
@@ -543,9 +556,13 @@ bool CreateOtherWayActivity(string dir){
 /**
  * RegisterActivity
  * 
- * 
- * @param  {string} 
- * @return {} 
+ * Register the new activity in repective
+ * path
+ * @param  {string} the process identificator that 
+ * will be register
+ * @param  {string} the directory in the activity was
+ * register
+ * {bool} true or false
  */
 bool RegisterActivity(string pids_number, string dir){
     string str = "ls -l ../config/pids/ | grep ^d | rev | cut -d \" \" -f 1 | rev";
@@ -596,6 +613,11 @@ bool RegisterActivity(string pids_number, string dir){
             command = str.c_str();
             apply_command(command);
         }
+
+        str = "rm -f " + dir + "pids.txt";
+        command = str.c_str();
+        apply_command(command);
+
     }
 }
 

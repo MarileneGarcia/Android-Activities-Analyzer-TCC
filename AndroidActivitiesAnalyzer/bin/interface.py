@@ -2,12 +2,36 @@
 from tkinter import * 
 from tkinter.ttk import *
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter.scrolledtext import ScrolledText
 from shutil import copy
 import os
 import time
 import traceback
+
+# Class declaration
+class ScrollableFrame(Frame):
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+        canvas = Canvas(self)
+        scrollbar = Scrollbar(self, orient="vertical", command=canvas.yview)
+        self.scrollable_frame = Frame(canvas)
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+
+        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.grid(row = 1, column = 0, sticky = tk.NSEW)
+        scrollbar.grid(row = 1, column = 0, sticky = tk.NS)
 
 # 1. Building First Screen and Root
 root = Tk()
@@ -25,14 +49,17 @@ root.grid_columnconfigure(0, weight=1)
 root.grid_columnconfigure(1, weight=1)
 root.grid_columnconfigure(2, weight=1)
 
+root.grid_rowconfigure(0, weight=1)
+root.grid_rowconfigure(1, weight=3)
+
 # 1. Adding the logo and begining
 logo = PhotoImage(file="logo.png")
 logo_resize = logo.subsample(2, 2)
 label = tk.Label(root, image=logo_resize)
-label.grid(row = 0, column = 0, rowspan = 5, sticky = W)
+label.grid(row = 0, column = 0, rowspan = 5, sticky = NW)
 
 frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
-frame.grid(row = 0, column = 1)
+frame.grid(row = 0, column = 1, rowspan = 5, sticky = NW)
 frame.grid_columnconfigure(0, weight=1)
 frame.grid_columnconfigure(1, weight=1)
 frame.grid_columnconfigure(2, weight=1)
@@ -40,7 +67,7 @@ frame.grid_columnconfigure(2, weight=1)
 label = tk.Label(frame, relief = FLAT, text ='Do you want to start Android Activities Analyzer', font = ("Courier", 18), background="#86acac") 
 label.grid(row = 0, column = 0, sticky = N, ipady = 10)
 
-button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : second_screen(root, frame, user_choices))
+button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : seventh_screen(root, frame, user_choices))
 button.grid(row = 1, column = 0)
 
 # 2. Building Second Screen
@@ -174,12 +201,12 @@ def fifth_screen (root, old_frame, user_choices):
     button_3.grid(row = 3, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
     button_4.grid(row = 4, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
 
-#7. The choice of system
+#9. The choice of system
 def fouth_step_algorithm (mensagem, user_choices, frame): 
     if verification(mensagem, user_choices) :
         sixth_screen(root, frame, user_choices)
 
-# 8. Building Fifth Screen
+# 10. Building Sixth Screen
 def sixth_screen (root, old_frame, user_choices):
     old_frame.destroy()
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
@@ -195,8 +222,81 @@ def sixth_screen (root, old_frame, user_choices):
     warning = Label(frame, text ='text file is the format required*', font = ("Courier", 10), background="#86acac") 
     warning.grid(row = 1, column = 0, sticky = NE)
 
-    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Choose File', command = lambda : open_file(root, frame))
+    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Choose File', command = lambda : open_file(root, frame, user_choices))
     button.grid(row = 2, column = 0, sticky = NW, pady = 2, padx = 10)
+
+    print = user_choices
+
+# 11. Building Seventh Screen
+def seventh_screen (root, old_frame, user_choices):
+    old_frame.destroy()
+
+    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
+    frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+    frame.grid_columnconfigure(2, weight=1)
+
+    label = Label(frame, text ='Choice the program mode:', font = ("Courier", 18), background="#86acac") 
+    label.grid(row = 0, column = 0, sticky = N, ipady = 10)
+    
+    button_rg = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : eigth_screen(root, frame, user_choices))
+    button_rg.grid(row = 1, column = 0, sticky = W, pady = 2, padx = 10)
+
+    button_an = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Analyze Activities', command = lambda : finish(root, frame))
+    button_an.grid(row = 1, column = 0, sticky = E, pady = 2, padx = 10)
+
+#12. Building Eigth Screen
+def eigth_screen (root, old_frame, user_choices):
+    old_frame.destroy()
+
+    #user_choices[0] = "selecione os identificadores de processos da operacao user_choice"
+    frame = ttk.LabelFrame(root, relief = FLAT, background="#86acac")
+    frame.grid(row = 0, column = 1, columnspan = 2, rowspan = 5, sticky = tk.NSEW)
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+    frame.grid_columnconfigure(2, weight=1)
+
+    frame.grid_rowconfigure(0, weight= 0)
+    frame.grid_rowconfigure(1, weight= 1)
+
+    label = Label(frame, text ='Choice the program mode:', font = ("Courier", 18), background="#86acac") 
+    label.grid(row = 0, column = 0, sticky = N, ipady = 10)
+
+    v_scroll = ScrollableFrame(frame, orient="vertical")
+    v_scroll.grid(row = 1, column = 0, sticky = tk.NS)
+
+    try:
+        file = open("../config/pids/info_file.txt", "r")
+    except:
+        messagebox.showerror('pop-up error', "program error: Can not create open a file: ../config/pids/info_file.txt\nprogram exit" )
+
+    line = file.readline()
+    if line[0] == ">" :
+        line = line[1:]
+        text_ck_button = line
+        line = file.readline()
+    else:
+        messagebox.showerror('pop-up error', "program error: File with wrong format: ../config/pids/info_file.txt\nprogram exit" )
+    
+    ck_button = []
+    ck_var = []
+    count = 0
+    while line:
+        if line[0] == ">" :
+            ck_var.append(tk.StringVar(v_scroll, "-1"))
+            tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1").pack(side = tk.TOP, expand = True, fill = 'both')
+            count += 1
+            line = line[1:]
+            text_ck_button = line
+        else:
+            text_ck_button = text_ck_button + "\n" + line
+        line = file.readline()
+
+# Doing later
+def analyze_step_algorithm (mensagem, user_choices, frame): 
+    if verification(mensagem, user_choices) :
+        sixth_screen(root, frame, user_choices)
 
 # 8. Finish Screen
 def finish_program (root, old_frame):
@@ -234,11 +334,11 @@ def verification (mensagem, user_choices):
     else:
         return False
 
-def open_file(root, frame):
+def open_file(root, frame, user_choices):
     file_path = filedialog.askopenfile(mode='r', filetypes=[('Text files', '*txt')])
     if file_path is not None:
         try:
-            copy(file_path.name, "../config/logs.txt")
+            copy(file_path.name, "../config/pids/logs.txt")
             label_log = Label(frame, text = file_path.name, font = ("Courier", 10), background="#86acac") 
             label_log.grid(row = 5, column = 0, pady = 3, sticky = NE)
             pb = Progressbar(frame, orient=HORIZONTAL, length=300, mode='determinate')
@@ -261,7 +361,7 @@ def open_file(root, frame):
                 pb.destroy()
                 label = Label(frame, text='File Uploaded Successfully!', font = ("Courier", 10), background="#86acac")
                 label.grid(row = 4, column = 0, pady=10)
-                finish_program(root, frame)
+                seventh_screen(root, frame, user_choices)
         except Exception: 
                 traceback.print_exc()
                 #must need to handle with the error, finish the program
