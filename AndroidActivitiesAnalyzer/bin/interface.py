@@ -10,12 +10,19 @@ from shutil import copy
 import os
 import time
 import traceback
+from turtle import st
 
 # Class declaration
 class ScrollableFrame(Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
-        canvas = Canvas(self)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=0)
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=0)
+        
+        canvas = Canvas(self,background="#86acac")
         scrollbar = Scrollbar(self, orient="vertical", command=canvas.yview)
         self.scrollable_frame = Frame(canvas)
 
@@ -25,13 +32,11 @@ class ScrollableFrame(Frame):
                 scrollregion=canvas.bbox("all")
             )
         )
-
+        
         canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-
         canvas.configure(yscrollcommand=scrollbar.set)
-
-        canvas.grid(row = 1, column = 0, sticky = tk.NSEW)
-        scrollbar.grid(row = 1, column = 0, sticky = tk.NS)
+        canvas.grid(row = 0, column = 0, sticky = "nsew")
+        scrollbar.grid(row = 0, column = 0, sticky = "nsw")
 
 # 1. Building First Screen and Root
 root = Tk()
@@ -250,21 +255,25 @@ def seventh_screen (root, old_frame, user_choices):
 def eigth_screen (root, old_frame, user_choices):
     old_frame.destroy()
 
-    #user_choices[0] = "selecione os identificadores de processos da operacao user_choice"
-    frame = ttk.LabelFrame(root, relief = FLAT, background="#86acac")
+    '''#user_choices[0] = "selecione os identificadores de processos da operacao user_choice"
+    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
     frame.grid(row = 0, column = 1, columnspan = 2, rowspan = 5, sticky = tk.NSEW)
     frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, weight=1)
     frame.grid_columnconfigure(2, weight=1)
 
     frame.grid_rowconfigure(0, weight= 0)
-    frame.grid_rowconfigure(1, weight= 1)
+    frame.grid_rowconfigure(1, weight= 1)'''
 
-    label = Label(frame, text ='Choice the program mode:', font = ("Courier", 18), background="#86acac") 
-    label.grid(row = 0, column = 0, sticky = N, ipady = 10)
+    root.grid_rowconfigure(0, weight= 1)
+    root.grid_rowconfigure(1, weight= 0)
 
-    v_scroll = ScrollableFrame(frame, orient="vertical")
-    v_scroll.grid(row = 1, column = 0, sticky = tk.NS)
+
+    button = tk.Button(root, text = 'Finish', command = lambda : finish(root, frame))
+    button.grid(row = 2, column = 1, sticky = "sew")
+
+    v_scroll = ScrollableFrame(root)
+    v_scroll.grid(row = 0, column = 1, columnspan = 2, sticky = "nsew")
 
     try:
         file = open("../config/pids/info_file.txt", "r")
@@ -285,7 +294,7 @@ def eigth_screen (root, old_frame, user_choices):
     while line:
         if line[0] == ">" :
             ck_var.append(tk.StringVar(v_scroll, "-1"))
-            tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1").pack(side = tk.TOP, expand = True, fill = 'both')
+            tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1", background="#86acaf").pack(side = tk.TOP, expand = True, fill = 'both')
             count += 1
             line = line[1:]
             text_ck_button = line
