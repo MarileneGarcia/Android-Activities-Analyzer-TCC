@@ -12,6 +12,7 @@
 #include <sstream> 
 #include <regex>
 #include <sys/stat.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -117,7 +118,7 @@ vector<string> FunctionsDirectory(string, string);
 
 void CreateFileAllInformation(vector<Pid>&);
 bool CreateActivityDirectory(string);
-bool CreateOtherWayActivity(string);
+bool CreateOtherWayActivity(string, string);
 bool RegisterActivity(string, string);
 
 #endif

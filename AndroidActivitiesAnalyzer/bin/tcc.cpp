@@ -40,8 +40,9 @@ int main (int argc, char *argv[]){
             break;
 
         case 4:
-            str = str + argv[2];
-            if (!CreateOtherWayActivity(str)){
+            str_dir = str_dir + argv[2];
+            str = str + argv[3];
+            if (!CreateOtherWayActivity(str_dir, str)){
                 cout << "program error: the other way to same activity can not registered" << endl;
                 cout << "program exit" << endl;
                 exit(0);
@@ -49,9 +50,15 @@ int main (int argc, char *argv[]){
             break;
         
         case 5:
+            printf("");
+            break;
+        
+        case 6:
             str = str + argv[2];
-            str_dir = str_dir + argv[3];
-            RegisterActivity(str, str_dir);
+            if(IsPathExist(str))
+                cout << "yes";
+            else
+                cout << "no";
             break;
 
     }
@@ -537,17 +544,23 @@ bool CreateActivityDirectory(string dir){
  * @param  {string} the path of activity
  * @return {} 
  */
-bool CreateOtherWayActivity(string dir){
+bool CreateOtherWayActivity(string dir, string pids){
     if(IsPathExist(dir)){
         string str = "ls -l " + dir + " | grep ^d | wc -l ";
         str = GetStdoutFromCommand(str);
+        str.erase(remove(str.begin(), str.end(), '\n'), str.end());
+        string way = "/way_" + str;
 
-        str = "mkdir " + dir + "/way_" + str;
+        str = "mkdir " + dir + way;
         const char *command = str.c_str();
         command = str.c_str();
         apply_command(command);
-        
-        return true;
+
+        dir = dir + way;
+        if(RegisterActivity(pids, dir))
+            return true;
+        else 
+            return false;
     } else {
         return false;
     }
@@ -573,6 +586,7 @@ bool RegisterActivity(string pids_number, string dir){
     sort(all_pids.begin(), all_pids.end());
     sort(choose_pids.begin(), choose_pids.end());
 
+    dir = dir + "/";
     int i = 0,j = 0;
     while (i < all_pids.size()){
         if(j == choose_pids.size() || all_pids[i] != choose_pids[j]){
@@ -617,8 +631,8 @@ bool RegisterActivity(string pids_number, string dir){
         str = "rm -f " + dir + "pids.txt";
         command = str.c_str();
         apply_command(command);
-
     }
+    return true;
 }
 
 void apply_command(const char *command){
