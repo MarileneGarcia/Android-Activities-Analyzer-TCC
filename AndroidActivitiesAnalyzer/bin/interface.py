@@ -12,8 +12,7 @@ import os
 import time
 import traceback
 from turtle import st
-
-from requests import patch
+from igraph import *
 
 # Building screens
 ##################################################################################
@@ -51,7 +50,7 @@ frame.grid_columnconfigure(2, weight=1)
 label = tk.Label(frame, relief = FLAT, text ='Do you want to start Android Activities Analyzer', font = ("Courier", 18), background="#86acac") 
 label.grid(row = 0, column = 0, sticky = N, ipady = 10)
 
-button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : eigth_screen(root, frame, user_choices))
+button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : second_screen(root, frame, user_choices))
 button.grid(row = 1, column = 0)
 
 ## 2. Second Screen 
@@ -316,6 +315,7 @@ def sixth_step_algorithm_part2 (mensagem, user_choices, frame):
 
 ## 9. Ninth Screen 
 ##################################################################################
+#https://blog.teclado.com/tkinter-scrollable-frames/
 class ScrollableFrame(Frame):
     def __init__(self, container, *args, **kwargs):
         super().__init__(container, *args, **kwargs)
@@ -341,10 +341,16 @@ class ScrollableFrame(Frame):
         canvas.grid(row = 0, column = 0, sticky = "nsew")
         scrollbar.grid(row = 0, column = 0, sticky = "nsw")
 
-def show_choices(root, frame):
-    print("oi")
+def show_choices(root, frame, ck_var):
+    pids = ""
+    for var in ck_var:
+        var_aux = str(var.get())
+        if "-1" not in var_aux:
+            pids = pids + var_aux + ","
+    pids = pids[:-1]
+    messagebox.showinfo('pop-up info', "Selected pIDs:\n" + pids)
 
-def register_activity(root, frame, ck_var, user_choices):
+def register_activity(root, frame, ck_var, user_choices, label, v_scroll):
     pids = ""
     path = "../config/activities"
     for choice in user_choices:
@@ -357,17 +363,17 @@ def register_activity(root, frame, ck_var, user_choices):
     pids = pids[:-1]
 
     command = "./saida.out 4 " + path + " " + pids
-    print(command)
     stream = os.popen(command)
     output = stream.read()
 
     if "program error" in output:
         messagebox.showerror('pop-up error', str(output))
         finish_program(root, frame)
+    else:
+        tenth_screen (root, frame, user_choices, label, v_scroll)
 
 def ninth_screen (root, old_frame, user_choices):
     old_frame.destroy()
-    ck_button = []
     ck_var = []
     count = 0
 
@@ -381,9 +387,9 @@ def ninth_screen (root, old_frame, user_choices):
     frame.grid(row = 2, column = 2, sticky = "sew")
     frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, weight=1)
-    button = tk.Button(frame, text = 'Next', font = ("Courier", 12), command = lambda : register_activity(root, frame, ck_var, user_choices))
+    button = tk.Button(frame, text = 'Next', font = ("Courier", 12), command = lambda : register_activity(root, frame, ck_var, user_choices, label, v_scroll))
     button.grid(row = 0, column = 1, sticky = "sew")
-    button = tk.Button(frame, text = 'Show choices', font = ("Courier", 12), command = lambda : show_choices(root, frame))
+    button = tk.Button(frame, text = 'Show pIDs choices', font = ("Courier", 12), command = lambda : show_choices(root, frame, ck_var))
     button.grid(row = 0, column = 0, sticky = "sew")
 
     v_scroll = ScrollableFrame(root)
@@ -413,6 +419,132 @@ def ninth_screen (root, old_frame, user_choices):
             text_ck_button = text_ck_button + "\n" + line
         line = file.readline()
 
+## 10. Tenth Screen 
+##################################################################################
+def tenth_screen (root, old_frame, user_choices, old_label, old_v_scroll) :
+    old_frame.destroy()
+    old_label.destroy()
+    old_v_scroll.destroy()
+
+    path = "../config/activities/"
+    for choice in user_choices:
+        path = path + choice + "/"
+
+    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
+    frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+    frame.grid_columnconfigure(2, weight=1)
+
+    frame.grid_rowconfigure(0, weight=0)
+    frame.grid_rowconfigure(1, weight=0)
+    frame.grid_rowconfigure(2, weight=1)
+
+    label = Label(frame, text ='The operation was registered:', font = ("Courier", 18), background="#86acac") 
+    label.grid(row = 0, column = 0, sticky = N, ipady = 10)
+    
+    frame_button = tk.LabelFrame(frame, relief = FLAT, background="#86acac")
+    frame_button.grid(row = 1, column = 0, sticky = "nsew")
+    frame_button.grid_columnconfigure(0, weight=1)
+    frame_button.grid_columnconfigure(1, weight=1)
+
+    button_1 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), text = 'Show dir tree files', command = lambda : list_files(root, frame, path))
+    button_1.grid(row = 1, column = 0, sticky = "nsew", pady = 2, padx = 10)
+
+    button_2 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), text = 'Show dir tree graph', command = lambda : print_activity_paths(path, user_choices))
+    button_2.grid(row = 1, column = 1, sticky = "nsew", pady = 2, padx = 10)
+
+    button_3 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Next', command = lambda : print_activity_paths(path, user_choices))
+    button_3.grid(row = 1, column = 1, sticky = "nsew", pady = 2, padx = 10)
+
+def print_activity_paths(path, user_choices):
+    names = []
+    numbers = []
+    edges = []
+    flag = 0
+
+    names.append(user_choices[-1])
+    numbers.append(flag)
+    dir = activity_paths(path, flag, names, numbers, edges)
+    graph = Graph(n=dir[0], edges=dir[3], directed=True)
+    
+
+    graph.vs["name"] = dir[1]
+    graph.vs["label"] = graph.vs["name"]
+    graph.es["color"] = ["gray"]
+    graph.vs["color"] = ["pink"]
+    graph.vs[0]["color"] = "blue"
+    graph.vs["font"] = "Courier bold"
+    
+    for edge in edges:
+        if 0 in edge:
+            graph.vs[graph.get_eid(edge[0], edge[1]) + 1]["color"] = "lightblue"
+    
+    visual_style = {}
+    visual_style["layout"] = graph.layout_reingold_tilford_circular()
+    visual_style["edge_color"] = graph.es["color"]
+    visual_style["autocurve"] = False
+    visual_style["vertex_size"] = 30
+    visual_style["vertex_label_color"] = "black"
+    visual_style["vertex_label_dist"] = 2
+    visual_style["edge_label_dist"] = -1
+    visual_style["edge_curved"] = 0
+    visual_style["margin"] = 40
+
+    p = Plot(background=(255,255,255), bbox=(1250, 1250), target=None)
+    p.add(graph, **visual_style, bbox=(0,0,1250, 1250), target=None)
+    p.show()
+
+def activity_paths(path, flag, names, numbers, edges) :
+    command = "ls -l " + path + " | grep ^d | rev | cut -d \" \" -f 1 | rev"
+    stream = os.popen(command)
+    output = stream.read()
+
+    ret = []
+    flag_dir = flag
+    dir = ""
+    for out in output :
+        if "\n" not in out:
+            dir = dir + out
+        else:
+            flag += 1
+            names.append(dir)
+            numbers.append(flag)
+            edge = (flag_dir, flag)
+            edges.append(edge)
+            new_path = path + dir + "/"
+
+            ret = activity_paths(new_path, flag, names, numbers, edges)
+            flag = ret[0]
+            names = ret[1]
+            numbers  = ret[2]
+            edges = ret[3]
+            dir = ""
+    
+    ret = []
+    ret.append(flag)
+    ret.append(names)
+    ret.append(numbers)
+    ret.append(edges)
+    return ret
+
+#https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
+def list_files(root, frame, startpath):
+    listbox = Listbox(frame)
+    scrollbar = Scrollbar(frame)
+    listbox.grid(row = 2, column = 0, sticky = "nsew")
+    scrollbar.grid(row = 2, column = 0, sticky = "nse")
+
+    for root, dirs, files in os.walk(startpath):
+        level = root.replace(startpath, '', 1).count(os.sep)
+        indent = ' ' * 6 * (level)
+        txt = str('{}{}/'.format(indent, os.path.basename(root)))
+        listbox.insert(END, txt)
+        
+    listbox.config(yscrollcommand = scrollbar.set)
+    scrollbar.config(command = listbox.yview)
+
+
 # Doing later
 def analyze_step_algorithm (mensagem, user_choices, frame): 
     if verification(mensagem, user_choices) :
@@ -434,7 +566,7 @@ def finish_program (root, old_frame):
 # Common Functions 
 ##################################################################################
 def verification (mensagem, user_choices): 
-    mensagem = str(mensagem)
+    mensagem = str(mensagem.lower())
     msg = "".join(c for c in mensagem if c.isalnum())
     if msg  != "" :
         command_dir = ""
@@ -465,6 +597,8 @@ def finish(root, frame):
         #must need to handle with the error, finish the program
         messagebox.showerror('pop-up error', str(output))
         print(str(output))'''
+
+
 
 # Execute Tkinter
 root.mainloop()

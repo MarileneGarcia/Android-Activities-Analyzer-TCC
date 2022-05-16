@@ -1,5 +1,8 @@
 # TCC
 
+pip install python-igraph
+pip install cairocffi
+
 ## Functions
 * manageDirectories
 * PidsTidsList
