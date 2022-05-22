@@ -121,5 +121,6 @@ bool CreateActivityDirectory(string);
 bool CreateOtherWayActivity(string, string);
 bool RegisterActivity(string, string);
 bool FinishRegisterActivity(string, vector<int>);
+bool CompareFile(string);
 
 #endif

@@ -52,10 +52,7 @@ int main (int argc, char *argv[]){
         
         case 5:
             str_dir = str_dir + argv[2];
-            str = str + argv[3];
-            choose_pids = split_number(str, ',');
-            FinishRegisterActivity(str_dir, choose_pids);
-            break;
+            CompareFile(str_dir);
         
         case 6:
             str = str + argv[2];
@@ -355,7 +352,7 @@ bool TidFunctions(vector<Pid>& pids){
  * @return {vector<string>} the funcions
  */
 vector<string> pick_functions(string dir, string tid_id){
-    string str = "awk '{print (substr($6, length($6), 1) != \":\") ? $6 : substr($6, 1, length($6)-1) }' " + dir + tid_id + ".txt" + "| sort -u > " + dir + "functions.txt";
+    string str = "awk '{print (substr($6, length($6), 1) != \":\") ? $6 : substr($6, 1, length($6)-1) }' " + dir + tid_id + ".txt" + "| sort -u > " + dir + "info.txt";
     const char *command = str.c_str();
     if(system(command)){         
         cout << "program error: can not select funcions of: "<< dir << tid_id << ".txt" << endl;
@@ -383,7 +380,7 @@ vector<string> FunctionsDirectory(string dir, string tid_id){
     string function, function_aux, str;
     const char *command;
     vector<string> functions, vec_name;
-    file.open(dir+"functions.txt");
+    file.open(dir+"info.txt");
 
     if(file.is_open()){        
         while(getline(file, function)){
@@ -406,13 +403,17 @@ vector<string> FunctionsDirectory(string dir, string tid_id){
             str = "grep " + function + " " + dir + tid_id + ".txt > " + dir + function_aux + "/" + function_aux + ".txt";
             command = str.c_str();
             apply_command(command);
+
+            str = "tr -s \" \" < " + dir + function_aux + "/" + function_aux + ".txt | cut -d \" \" -f 5- > " + dir + function_aux + "/info.txt && rm -rf " + dir + function_aux + "/" + function_aux + ".txt";
+            command = str.c_str();
+            apply_command(command);
             
             functions.push_back(function);
         }
         file.close();
         return functions;
     } else {
-        cout << "program error: can not acess the functions data base of: " << dir <<"functions.txt" << endl;
+        cout << "program error: can not acess the functions data base of: " << dir <<"info.txt" << endl;
         cout << "program exit" << endl;
         exit(0);
     }
@@ -622,7 +623,7 @@ bool RegisterActivity(string pids_number, string dir){
         apply_command(command);
 
         str = "tr -s \" \" < " + dir + "/process_" + to_string(j) + "/" + to_string(choose_pids[j]) + ".txt | cut -d \" \" -f 5- > " 
-        + dir + "/process_" + to_string(j) + "/process_" + to_string(j) + ".txt && rm -f " + dir + "/process_" + to_string(j) + "/" + to_string(choose_pids[j]) + ".txt";
+        + dir + "/process_" + to_string(j) + "/log.txt && rm -f " + dir + "/process_" + to_string(j) + "/" + to_string(choose_pids[j]) + ".txt";
         command = str.c_str();
         apply_command(command);
 
@@ -635,15 +636,20 @@ bool RegisterActivity(string pids_number, string dir){
             apply_command(command);
 
             str = "tr -s \" \" < " + dir + "/process_" + to_string(j) + "/" "thread_" + to_string(i) + "/" + to_string(tids[i]) + ".txt | cut -d \" \" -f 5- > " + dir + "/process_" 
-            + to_string(j) + "/" "thread_" + to_string(i) + "/" + "thread_" + to_string(i) + ".txt && rm -f " + dir + "/process_" + to_string(j) + "/" "thread_" + to_string(i) + "/" + to_string(tids[i]) + ".txt";
+            + to_string(j) + "/" "thread_" + to_string(i) + "/" + "log.txt && rm -f " + dir + "/process_" + to_string(j) + "/" "thread_" + to_string(i) + "/" + to_string(tids[i]) + ".txt";
             command = str.c_str();
             apply_command(command);
         }
 
-        str = "rm -f " + dir + "pids.txt";
+        str = "tr -s \" \" < " + dir + "/process_" + to_string(j) + "/log.txt | cut -d \" \" -f 2 | tr \":\" \" \" | sort -u > "+ dir + "/process_" + to_string(j) + "/info.txt" ; 
         command = str.c_str();
-        apply_command(command);
+        apply_command(command); 
     }
+
+    str = "rm -f " + dir + "pids.txt";
+    command = str.c_str();
+    apply_command(command);
+
     if(FinishRegisterActivity(dir, choose_pids))
         return true;
     else
@@ -699,6 +705,9 @@ void apply_command(const char *command){
     }
 }
 
+bool CompareFile(string dir){
+
+}
 #else
 cout << "Some problems were found to execute the program" << endl;
 #endif
