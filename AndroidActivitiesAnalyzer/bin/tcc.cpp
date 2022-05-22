@@ -53,6 +53,7 @@ int main (int argc, char *argv[]){
         case 5:
             str_dir = str_dir + argv[2];
             CompareFile(str_dir);
+            break;
         
         case 6:
             str = str + argv[2];
@@ -706,7 +707,51 @@ void apply_command(const char *command){
 }
 
 bool CompareFile(string dir){
+    vector<string> activities;
+    vector<string> ways;
+    vector<string> info_filter;
+    string info;
 
+    string str = "tr -s \" \" < " + dir + "target/target.txt | cut -d \" \" -f 5- > " + dir + "target/log.txt";
+    const char *command = str.c_str();
+    apply_command(command);
+
+    str = GetStdoutFromCommand("ls -l " + dir + "| grep ^d | tr -s \" \" | cut -d \" \" -f 9");
+    activities = split_character(str,'\n');
+
+    if(activities.size() == 1 && activities[0] == "target"){
+        cout << "program error: There is no activity regitered in: " << dir << endl;
+        cout << "program exit" << endl;
+        exit(0);
+    } else if (activities.size() == 1) {
+        cout << "program error: Something goes wrong" << endl;
+        cout << "program exit" << endl;
+        exit(0);
+    } else {
+        for (string activity : activities){
+            if(activity != "target"){
+                str = GetStdoutFromCommand("ls -l " + dir + activity + "/ | grep ^d | tr -s \" \" | cut -d \" \" -f 9");
+                ways = split_character(str,'\n');
+
+                for (string way : ways){
+                    info = GetStdoutFromCommand("cat " + dir + activity + "/" + way + "/info.txt");
+                    info_filter = split_character(info,'\n');
+                    str = "> " + dir + activity + "/" + way + "/log_target.txt";
+                    const char *command = str.c_str();
+                    apply_command(command);
+
+                    for(string info_aux : info_filter){
+                        cout << info_aux << endl;
+
+                        /* could be a log priority filter here */
+                        str = "grep -E \"[S,F,A,E,W,I,D,V] +" + info_aux + " *:\" "+ dir + "target/log.txt >> " + dir + activity + "/" + way + "/log_target.txt";
+                        const char *command = str.c_str();
+                        system(command);
+                    }
+                }
+            }
+        }
+    }
 }
 #else
 cout << "Some problems were found to execute the program" << endl;
