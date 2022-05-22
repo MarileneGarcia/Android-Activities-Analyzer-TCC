@@ -120,5 +120,6 @@ void CreateFileAllInformation(vector<Pid>&);
 bool CreateActivityDirectory(string);
 bool CreateOtherWayActivity(string, string);
 bool RegisterActivity(string, string);
+bool FinishRegisterActivity(string, vector<int>);
 
 #endif

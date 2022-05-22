@@ -4,6 +4,7 @@
 int main (int argc, char *argv[]){
     string str = "", str_dir = "";
     vector<Pid> pids = {};
+    vector<int> choose_pids;
     switch (stoi(argv[1])){
         case 0:
             if(!ProgramBegin()){
@@ -50,7 +51,10 @@ int main (int argc, char *argv[]){
             break;
         
         case 5:
-            printf("");
+            str_dir = str_dir + argv[2];
+            str = str + argv[3];
+            choose_pids = split_number(str, ',');
+            FinishRegisterActivity(str_dir, choose_pids);
             break;
         
         case 6:
@@ -488,10 +492,15 @@ void printPids(vector<Pid> pids){
 void CreateFileAllInformation(vector<Pid>& pids){
     int flag = 0;
     ofstream file("../config/pids/info_file.txt");
+    ofstream file_aux("../config/pids/info_file_aux.txt");
     for(Pid pid : pids){
         file << ">" << pid.get_pid() << ": ";
+        file_aux << ">" << pid.get_pid() << ": ";
+        
         for(Tid tid: pid.get_tids()){
             file << "[" << tid.get_tid()<< ": ";
+            file_aux << "[" << tid.get_tid()<< ": ";
+
             vector<string> it = tid.get_functions();
             vector<string>::iterator ptr;
             flag = 0;
@@ -503,11 +512,14 @@ void CreateFileAllInformation(vector<Pid>& pids){
                 }
                 if(ptr != it.end()-1){
                     file << *ptr << ",";
+                    file_aux << *ptr << ",";
                 } else {
                     file << *ptr << "]" << endl;
+                    file_aux << *ptr << "]";
                 }       
             }
         }
+        file_aux << endl;
     }
     file.close();
 }
@@ -589,7 +601,7 @@ bool RegisterActivity(string pids_number, string dir){
     dir = dir + "/";
     int i = 0,j = 0;
     while (i < all_pids.size()){
-        if(j == choose_pids.size() || all_pids[i] != choose_pids[j]){
+        if(j >= choose_pids.size() || all_pids[i] != choose_pids[j]){
             str = "rm -rf ../config/pids/" + to_string(all_pids[i]);
             command = str.c_str();
             apply_command(command);
@@ -632,6 +644,50 @@ bool RegisterActivity(string pids_number, string dir){
         command = str.c_str();
         apply_command(command);
     }
+    if(FinishRegisterActivity(dir, choose_pids))
+        return true;
+    else
+        return false;
+}
+
+/**
+ * FinishRegisterActivity
+ * 
+ * To finish the activity register, the info_file.txt
+ * and the logs.txt need to be in a right format because
+ * the analise activitites will use this files
+ * @param  {vector<int>} the process identificator that 
+ * will be register
+ * @param  {string} the directory in the activity was
+ * register
+ * {bool} true or false
+ */
+bool FinishRegisterActivity(string dir, vector<int> pids){
+    string str;
+    const char *command;
+
+    for(int pid : pids){
+        str = "tr -s \" \" < " + dir + "logs.txt | grep -E \"[0-9]{1} " + to_string(pid) + " [0-9]{1}\" >> " + dir + "log_aux.txt";
+        command = str.c_str();
+        apply_command(command);
+
+        str = "tr -s \" \" < " + dir + "info_file_aux.txt | grep -E \">" + to_string(pid) + ":\" >> " + dir + "i_file.txt";
+        command = str.c_str();
+        apply_command(command);
+    }
+
+    str = "rm -rf " + dir + "logs.txt && rm -rf " + dir + "info_file.txt && rm -rf " + dir + "info_file_aux.txt";
+    command = str.c_str();
+    apply_command(command);
+
+    str = "tr -s \" \" < " + dir + "log_aux.txt| cut -d \" \" -f 5- > " + dir + "log.txt && rm -rf " + dir + "log_aux.txt";
+    command = str.c_str();
+    apply_command(command);
+
+    str = "sed -E 's/[0-9]+: / /g' " + dir + "i_file.txt | tr \">|[\" \" \" | tr -d \" |\n\" | tr \",|]\" \"\n\" | sort -u > " + dir + "info.txt && rm -rf " + dir + "i_file.txt";
+    command = str.c_str();
+    apply_command(command);
+
     return true;
 }
 
