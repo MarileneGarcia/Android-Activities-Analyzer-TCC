@@ -741,18 +741,49 @@ bool CompareFile(string dir){
                     apply_command(command);
 
                     for(string info_aux : info_filter){
-                        cout << info_aux << endl;
-
                         /* could be a log priority filter here */
                         str = "grep -E \"[S,F,A,E,W,I,D,V] +" + info_aux + " *:\" "+ dir + "target/log.txt >> " + dir + activity + "/" + way + "/log_target.txt";
                         const char *command = str.c_str();
                         system(command);
                     }
+
+                    str = dir + activity + "/" + way + "/";
+                    AnalizeZipSize(str);
                 }
             }
         }
     }
 }
+
+bool AnalizeZipSize(string dir){
+    string str = "zip " + dir + "log.zip " + dir + "log.txt && zip " + dir + "log_target.zip " + dir + "log_target.txt";
+    const char *command = str.c_str();
+    apply_command(command);
+
+    double size_log, size_log_target, percentage;
+    string str_aux;
+
+    str = "ls -l " + dir + "log.zip | tr -s \" \" | cut -d \" \" -f 5 | tr -d \"\n\"";
+    str_aux = GetStdoutFromCommand(str);
+    size_log = stod(str_aux);
+
+    str = "ls -l " + dir + "log_target.zip | tr -s \" \" | cut -d \" \" -f 5 | tr -d \"\n\"";
+    str_aux = GetStdoutFromCommand(str);
+    size_log_target = stod(str_aux);
+
+    if(size_log_target >= size_log){
+        percentage = (1 - ((size_log_target - size_log)/size_log_target))*100;
+    } else {
+        percentage = (1 - ((size_log - size_log_target)/size_log))*100;
+    }
+
+    str = "rm -rf " + dir + "log.zip && rm -rf " + dir + "log_target.zip";
+    command = str.c_str();
+    apply_command(command);
+    
+    //cout << dir << "log.txt && log_target.txt : " << to_string(percentage) << "% match" << endl;
+}
+
 #else
 cout << "Some problems were found to execute the program" << endl;
 #endif
