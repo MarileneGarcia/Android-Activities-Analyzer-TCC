@@ -749,6 +749,7 @@ bool CompareFile(string dir){
 
                     str = dir + activity + "/" + way + "/";
                     AnalizeZipSize(str);
+                    AnalizeCommands(str);
                 }
             }
         }
@@ -782,6 +783,53 @@ bool AnalizeZipSize(string dir){
     apply_command(command);
     
     //cout << dir << "log.txt && log_target.txt : " << to_string(percentage) << "% match" << endl;
+}
+
+bool AnalizeCommands(string dir){
+    /* sort files */
+    string str_aux;
+    vector<string> match_lines;
+    string str = "sort -u " + dir + "log.txt | tr -s \" \" > " + dir + "s_log.txt && sort -u " + dir + "log_target.txt | tr -s \" \" > " + dir + "s_log_t.txt";
+    const char *command = str.c_str();
+    apply_command(command);
+
+    /* compare using comm */
+    /* us_log_t is the answer */
+    str = "comm -23 " + dir + "s_log_t.txt " + dir + "s_log.txt > " + dir + "us_log_t.txt";
+    command = str.c_str();
+    apply_command(command);
+
+    /* compare using grep and remove all the hex number */
+    str = "sed -E \"s/[^0-9]0x[a-fA-F0-9]+/(HEX_VALUE)/g\" " + dir + "s_log.txt | tr -s \" \" > " + dir + "nh_s_log.txt && sed -E \"s/[^0-9]0x[a-fA-F0-9]+/(HEX_VALUE)/g\" " + dir + "s_log_t.txt | tr -s \" \" > " + dir + "nh_s_log_t.txt";
+    command = str.c_str();
+    apply_command(command);
+    str_aux = GetStdoutFromCommand("grep -Fxvnf " + dir + "nh_s_log.txt " + dir + "nh_s_log_t.txt | cut -d \":\" -f 1");
+    match_lines = split_character(str_aux,'\n');
+    str_aux = "";
+    for (string line : match_lines){
+        str_aux = str_aux + line + "p; ";
+    }
+    str = "sed -n \"" + str_aux + "\" < " + dir + "s_log_t.txt > " + dir + "nh_us_log_t.txt";
+    command = str.c_str();
+    apply_command(command);
+
+    /* compare using grep and remove all numbers */
+    str = "tr -d [0-9] < " + dir + "nh_s_log.txt | tr -s \" \" > " + dir + "nn_s_log.txt && tr -d [0-9] < " + dir + "nh_s_log_t.txt | tr -s \" \" > " + dir + "nn_s_log_t.txt";
+    command = str.c_str();
+    apply_command(command);
+    str_aux = GetStdoutFromCommand("grep -Fxvnf " + dir + "nn_s_log.txt " + dir + "nn_s_log_t.txt | cut -d \":\" -f 1");
+    match_lines = split_character(str_aux,'\n');
+    str_aux = "";
+    for (string line : match_lines){
+        str_aux = str_aux + line + "p; ";
+    }
+    str = "sed -n \"" + str_aux + "\" < " + dir + "s_log_t.txt > " + dir + "nn_us_log_t.txt";
+    command = str.c_str();
+    apply_command(command);
+
+    str = "rm -rf " + dir + "s_log.txt " + dir + "s_log_t.txt " + dir + "nh_s_log.txt " + dir + "nh_s_log_t.txt " + dir + "nn_s_log.txt " + dir + "nn_s_log_t.txt ";
+    command = str.c_str();
+    apply_command(command);
 }
 
 #else
