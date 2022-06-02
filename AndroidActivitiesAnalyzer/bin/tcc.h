@@ -122,7 +122,7 @@ bool CreateOtherWayActivity(string, string);
 bool RegisterActivity(string, string);
 bool FinishRegisterActivity(string, vector<int>);
 bool CompareFile(string);
-bool AnalizeZipSize(string);
-bool AnalizeCommands(string);
+double AnalizeZipSize(string);
+double AnalizeCommands(string);
 
 #endif

@@ -711,8 +711,11 @@ bool CompareFile(string dir){
     vector<string> ways;
     vector<string> info_filter;
     string info;
+    double percentage_zip, percentagem_lines;
+    string str = dir + "target/results.txt";
+    ofstream file(str);
 
-    string str = "tr -s \" \" < " + dir + "target/target.txt | cut -d \" \" -f 5- > " + dir + "target/log.txt";
+    str = "tr -s \" \" < " + dir + "target/target.txt | cut -d \" \" -f 5- > " + dir + "target/log.txt";
     const char *command = str.c_str();
     apply_command(command);
 
@@ -748,15 +751,23 @@ bool CompareFile(string dir){
                     }
 
                     str = dir + activity + "/" + way + "/";
-                    AnalizeZipSize(str);
-                    AnalizeCommands(str);
+                    percentage_zip = AnalizeZipSize(str);
+                    percentagem_lines = AnalizeCommands(str);
+                    /* The accuracy of algorithm can be change here */
+                    if (percentage_zip >= 50.0 && percentagem_lines >= 50.0){
+                        file << "***************************************\n";
+                        file << "The activity: " << activity << "is a possible match\n";
+                        file << "In the " << way << "it achive:\n";
+                        file << percentage_zip << "% of zip percentage\n";
+                        file << percentagem_lines << "% of lines percentage\n\n";
+                    }
                 }
             }
         }
     }
 }
 
-bool AnalizeZipSize(string dir){
+double AnalizeZipSize(string dir){
     string str = "zip " + dir + "log.zip " + dir + "log.txt && zip " + dir + "log_target.zip " + dir + "log_target.txt";
     const char *command = str.c_str();
     apply_command(command);
@@ -782,10 +793,11 @@ bool AnalizeZipSize(string dir){
     command = str.c_str();
     apply_command(command);
     
-    //cout << dir << "log.txt && log_target.txt : " << to_string(percentage) << "% match" << endl;
+    cout << "Percentage for zip size is: " << to_string(percentage) << "%\n";
+    return percentage;
 }
 
-bool AnalizeCommands(string dir){
+double AnalizeCommands(string dir){
     /* sort files */
     string str_aux;
     vector<string> match_lines;
@@ -820,16 +832,29 @@ bool AnalizeCommands(string dir){
     str_aux = GetStdoutFromCommand("grep -Fxvnf " + dir + "nn_s_log.txt " + dir + "nn_s_log_t.txt | cut -d \":\" -f 1");
     match_lines = split_character(str_aux,'\n');
     str_aux = "";
+
+    int number_lines = 0, number_total = 0;
+    double percentage = 0;
+
     for (string line : match_lines){
         str_aux = str_aux + line + "p; ";
+        number_lines += 1;
     }
     str = "sed -n \"" + str_aux + "\" < " + dir + "s_log_t.txt > " + dir + "nn_us_log_t.txt";
     command = str.c_str();
     apply_command(command);
 
+    str = GetStdoutFromCommand("wc -l < " + dir +"s_log_t.txt");
+    number_total = stoi(str);
+
+    percentage = ( (number_total - number_lines)/number_total ) * 100;
+    cout << "Percentage for match lines is: " << to_string(percentage) << "%\n";
+
     str = "rm -rf " + dir + "s_log.txt " + dir + "s_log_t.txt " + dir + "nh_s_log.txt " + dir + "nh_s_log_t.txt " + dir + "nn_s_log.txt " + dir + "nn_s_log_t.txt ";
     command = str.c_str();
     apply_command(command);
+
+    return percentage;
 }
 
 #else
