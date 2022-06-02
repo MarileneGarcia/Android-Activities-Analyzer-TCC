@@ -86,41 +86,34 @@ class Pid {
         }
 };
 
-/** Auxiliar Functions **/
+/* Auxiliar Functions */
 void apply_command(const char *);
 bool WriteFile(string, string);
 string GetStdoutFromCommand(string);
 void printPids(vector<Pid>);
-/** ****************** **/
+vector<int> split_number(string, char);
+vector<string> split_character(string, char);
+vector<string> pick_functions(string, string);
 
-/** The first function executed when initialized **/
+/* Register Activity */
 bool ProgramBegin();
-/** ******************************************** **/
-
-/** Functions related to the four initial steps **/
 void CheckPath(string);
 bool IsPathExist(const string &);
-/** ******************************************* **/
-
-/** Functions related to mapped all actvities of a log file **/
 vector<Pid> FileOrganization(string);
 vector<Pid> allPids(string);
-vector<int> split_number(string, char);
 void InitialOrganization(string);
 bool createDirectories(string);
 vector<Pid> PidsTidsList(string);
 bool PidsTidsDirectories(vector<Pid>&, string);
 bool TidFunctions(vector<Pid>&);
-vector<string> split_character(string, char);
-vector<string> pick_functions(string, string);
 vector<string> FunctionsDirectory(string, string);
-/** ******************************************************* **/
-
 void CreateFileAllInformation(vector<Pid>&);
 bool CreateActivityDirectory(string);
 bool CreateOtherWayActivity(string, string);
 bool RegisterActivity(string, string);
 bool FinishRegisterActivity(string, vector<int>);
+
+/* Analyze Activity */
 bool CompareFile(string);
 double AnalizeZipSize(string);
 double AnalizeCommands(string);

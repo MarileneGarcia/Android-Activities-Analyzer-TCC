@@ -52,7 +52,11 @@ int main (int argc, char *argv[]){
         
         case 5:
             str_dir = str_dir + argv[2];
-            CompareFile(str_dir);
+            if(CompareFile(str_dir)){
+                cout << "program sucess" << endl;
+            } else {
+                cout << "program fail" << endl;
+            }
             break;
         
         case 6:
@@ -589,7 +593,7 @@ bool CreateOtherWayActivity(string dir, string pids){
  * will be register
  * @param  {string} the directory in the activity was
  * register
- * {bool} true or false
+ * @return {bool} true or false
  */
 bool RegisterActivity(string pids_number, string dir){
     string str = "ls -l ../config/pids/ | grep ^d | rev | cut -d \" \" -f 1 | rev";
@@ -667,7 +671,7 @@ bool RegisterActivity(string pids_number, string dir){
  * will be register
  * @param  {string} the directory in the activity was
  * register
- * {bool} true or false
+ * @return {bool} true or false
  */
 bool FinishRegisterActivity(string dir, vector<int> pids){
     string str;
@@ -698,6 +702,13 @@ bool FinishRegisterActivity(string dir, vector<int> pids){
     return true;
 }
 
+/**
+ * apply_command
+ * 
+ * Apply a command in bash
+ * @param  {const char *} command
+ * @return {}
+ */
 void apply_command(const char *command){
     if(system(command)){        
         cout << "program error: Can not apply the command: " << command << endl;
@@ -706,6 +717,14 @@ void apply_command(const char *command){
     }
 }
 
+/**
+ * CompareFile
+ * 
+ * Compare the target file with all the other activities 
+ * already registered in the directory
+ * @param  {string} directory of activities
+ * @return {bool} true or false
+ */
 bool CompareFile(string dir){
     vector<string> activities;
     vector<string> ways;
@@ -714,6 +733,7 @@ bool CompareFile(string dir){
     double percentage_zip, percentagem_lines;
     string str = dir + "target/results.txt";
     ofstream file(str);
+    int flag = 0;
 
     str = "tr -s \" \" < " + dir + "target/target.txt | cut -d \" \" -f 5- > " + dir + "target/log.txt";
     const char *command = str.c_str();
@@ -755,6 +775,7 @@ bool CompareFile(string dir){
                     percentagem_lines = AnalizeCommands(str);
                     /* The accuracy of algorithm can be change here */
                     if (percentage_zip >= 50.0 && percentagem_lines >= 50.0){
+                        flag += 1;
                         file << "***************************************\n";
                         file << "The activity: " << activity << "is a possible match\n";
                         file << "In the " << way << "it achive:\n";
@@ -765,8 +786,21 @@ bool CompareFile(string dir){
             }
         }
     }
+    if(flag == 0){
+        return false;
+    } else {
+        return true;
+    }
 }
 
+/**
+ * AnalizeZipSize
+ * 
+ * Compare the target file with the activity 
+ * using the size of zip
+ * @param  {string} directory of the activity
+ * @return {double} percentage of match
+ */
 double AnalizeZipSize(string dir){
     string str = "zip " + dir + "log.zip " + dir + "log.txt && zip " + dir + "log_target.zip " + dir + "log_target.txt";
     const char *command = str.c_str();
@@ -797,6 +831,14 @@ double AnalizeZipSize(string dir){
     return percentage;
 }
 
+/**
+ * AnalizeCommands
+ * 
+ * Compare the target file with the activity 
+ * using unmatch lines
+ * @param  {string} directory of the activity
+ * @return {double} percentage of match
+ */
 double AnalizeCommands(string dir){
     /* sort files */
     string str_aux;
