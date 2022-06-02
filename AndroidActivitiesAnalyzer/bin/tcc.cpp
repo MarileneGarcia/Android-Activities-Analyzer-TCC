@@ -731,9 +731,11 @@ bool CompareFile(string dir){
     vector<string> info_filter;
     string info;
     double percentage_zip, percentagem_lines;
-    string str = dir + "target/results.txt";
+    string str = "../results/results.txt";
     ofstream file(str);
     int flag = 0;
+
+    file << "The directory:\n" + dir + "\n\n";
 
     str = "tr -s \" \" < " + dir + "target/target.txt | cut -d \" \" -f 5- > " + dir + "target/log.txt";
     const char *command = str.c_str();
@@ -777,14 +779,37 @@ bool CompareFile(string dir){
                     if (percentage_zip >= 50.0 && percentagem_lines >= 50.0){
                         flag += 1;
                         file << "***************************************\n";
-                        file << "The activity: " << activity << "is a possible match\n";
-                        file << "In the " << way << "it achive:\n";
+                        file << activity << ": "<< way << ": is a possible match\n";
                         file << percentage_zip << "% of zip percentage\n";
                         file << percentagem_lines << "% of lines percentage\n\n";
+                        
+                        str = "mkdir -p ../results/" + activity + "/" + way;
+                        command = str.c_str();
+                        apply_command(command);
+
+                        str = "mv " + dir + activity + "/" + way + "/us_log_t.txt  ../results/" + activity + "/" + way + "/unique_umatch_lines.txt";
+                        command = str.c_str();
+                        apply_command(command);
+
+                        str = "mv " + dir + activity + "/" + way + "/nh_us_log_t.txt  ../results/" + activity + "/" + way + "/unique_umatch_lines_no_hex.txt";
+                        command = str.c_str();
+                        apply_command(command);
+
+                        str = "mv " + dir + activity + "/" + way + "/nn_us_log_t.txt  ../results/" + activity + "/" + way + "/unique_umatch_lines_no_numbers.txt";
+                        command = str.c_str();
+                        apply_command(command);
+
+                        str = "rm -rf " + dir + activity + "/" + way + "/us_log_t.txt && rm -rf " + dir + activity + "/" + way + "/nh_us_log_t.txt && rm -rf " + dir + activity + "/" + way + "/nn_us_log_t.txt && rm -rf " + dir + activity + "/" + way + "/log_target.txt";
+                        command = str.c_str();
+                        apply_command(command);
+
                     }
                 }
             }
         }
+        str = "rm -f " + dir + "target/target.txt && rm -f " + dir + "target/log.txt";
+        const char *command = str.c_str();
+        apply_command(command);
     }
     if(flag == 0){
         return false;
@@ -875,8 +900,7 @@ double AnalizeCommands(string dir){
     match_lines = split_character(str_aux,'\n');
     str_aux = "";
 
-    int number_lines = 0, number_total = 0;
-    double percentage = 0;
+    double number_lines = 0, number_total = 0, percentage = 0;
 
     for (string line : match_lines){
         str_aux = str_aux + line + "p; ";
@@ -887,7 +911,7 @@ double AnalizeCommands(string dir){
     apply_command(command);
 
     str = GetStdoutFromCommand("wc -l < " + dir +"s_log_t.txt");
-    number_total = stoi(str);
+    number_total = stod(str);
 
     percentage = ( (number_total - number_lines)/number_total ) * 100;
     cout << "Percentage for match lines is: " << to_string(percentage) << "%\n";
