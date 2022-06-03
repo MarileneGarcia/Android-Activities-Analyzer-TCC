@@ -81,17 +81,17 @@ int main (int argc, char *argv[]){
  * @return {bool} true or false
  */
 bool ProgramBegin(){
-    string str = "rm -rf ../config/pids";
+    string str = "rm -rf ../config/pids && rm -rf ../results";
     const char *command = str.c_str();
     if(system(command)){        
-        cout << "program error: Can not remove a old pid root directory" << endl;
+        cout << "program error: Can not remove old results and pid root directory" << endl;
         return false;
     } 
 
-    str = "mkdir ../config/pids";
+    str = "mkdir ../config/pids && mkdir ../results";
     command = str.c_str();
     if(system(command)){        
-        cout << "program error: Can not create a new pid root directory" << endl;
+        cout << "program error: Can not create new results and pid root directory" << endl;
         return false;
     }
 

@@ -1,5 +1,4 @@
 # Import Modules
-##################################################################################
 from tkinter import * 
 from tkinter.ttk import *
 import tkinter as tk
@@ -15,16 +14,10 @@ from turtle import st
 from igraph import *
 
 # Building screens
-##################################################################################
 
-## 1. First Screen and Root window
-##################################################################################
+# Screen 0
 root = Tk()
 user_choices = []
-mot   = "Motorola"
-smsng = "Samsung"
-xm    = "Xiaomi"
-lg    = "LG"
 
 root.title("Android Activities Analyzer")
 root.configure(background="#86acac")
@@ -37,7 +30,7 @@ root.grid_rowconfigure(0, weight=1)
 root.grid_rowconfigure(1, weight=3)
 
 logo = PhotoImage(file="logo.png")
-logo_resize = logo.subsample(2, 2)
+logo_resize = logo.subsample(3, 3)
 label = tk.Label(root, image=logo_resize)
 label.grid(row = 0, column = 0, rowspan = 5, sticky = NW)
 
@@ -50,13 +43,12 @@ frame.grid_columnconfigure(2, weight=1)
 label = tk.Label(frame, relief = FLAT, text ='Do you want to start Android Activities Analyzer', font = ("Courier", 18), background="#86acac") 
 label.grid(row = 0, column = 0, sticky = N, ipady = 10)
 
-button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : second_screen(root, frame, user_choices))
+button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : screen_1(root, frame, user_choices))
 button.grid(row = 1, column = 0)
 
-## 2. Second Screen 
-##################################################################################
-def second_screen (root, old_frame, user_choices):
-    command = "./saida.out 0"
+# Screen 1
+def screen_1 (root, old_frame, user_choices):
+    command = "./program.out 0"
     stream = os.popen(command)
     output = stream.read()
     if "program error" in output:
@@ -71,11 +63,45 @@ def second_screen (root, old_frame, user_choices):
     frame.grid_columnconfigure(1, weight=1)
     frame.grid_columnconfigure(2, weight=1)
 
+    label = Label(frame, text ='What is the Android Version', font = ("Courier", 18), background="#86acac") 
+    label.grid(row = 0, column = 0, sticky = N, ipady = 10)
+    choice = StringVar(frame, "")
+
+    button_0 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : inspect_screen_1(choice.get(), user_choices, frame))
+    button_1 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = "Android 12", variable = choice, value = "android12")
+    button_2 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = "Android 11", variable = choice, value = "android11")
+    button_3 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = "Android 10", variable = choice, value = "android10")
+    button_4 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = "Android 09", variable = choice, value = "android09")
+
+    button_0.grid(row = 5, column = 0, sticky = N, pady = 2, padx = 10)
+    button_1.grid(row = 1, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)  
+    button_2.grid(row = 2, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
+    button_3.grid(row = 3, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
+    button_4.grid(row = 4, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
+
+def inspect_screen_1 (mensagem, user_choices, frame):
+    if verification(mensagem, user_choices):
+        screen_2(root, frame, user_choices)
+
+# Screen 2
+def screen_2 (root, old_frame, user_choices):
+    mot   = "Motorola"
+    smsng = "Samsung"
+    xm    = "Xiaomi"
+    lg    = "LG"
+
+    old_frame.destroy()
+    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
+    frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+    frame.grid_columnconfigure(2, weight=1)
+
     label = Label(frame, text ='What is the cellphone Brand', font = ("Courier", 18), background="#86acac") 
     label.grid(row = 0, column = 0, sticky = N, ipady = 10)
     choice = StringVar(frame, "")
 
-    button_0 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : first_step_algorithm(choice.get(), user_choices, frame))
+    button_0 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : inspect_screen_2(choice.get(), user_choices, frame))
     button_1 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = mot, variable = choice, value = mot)
     button_2 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = smsng, variable = choice, value = smsng)
     button_3 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = xm, variable = choice, value = xm)
@@ -87,14 +113,13 @@ def second_screen (root, old_frame, user_choices):
     button_3.grid(row = 3, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
     button_4.grid(row = 4, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
 
-def first_step_algorithm (mensagem, user_choices, frame):
-    if verification(mensagem, user_choices) :
-        third_screen(root, frame, user_choices)
+def inspect_screen_2 (mensagem, user_choices, frame):
+    if verification(mensagem, user_choices):
+        screen_3(root, frame, user_choices)
 
 
-## 3. Third Screen 
-##################################################################################
-def third_screen (root, old_frame, user_choices):
+# Screen 3
+def screen_3 (root, old_frame, user_choices):
     old_frame.destroy()
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
     frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
@@ -110,18 +135,17 @@ def third_screen (root, old_frame, user_choices):
 
     choice = StringVar(frame, "")
     entry = tk.Entry(frame, textvariable = choice, font=('calibre',10,'normal'))
-    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : second_step_algorithm(choice.get(), user_choices, frame))
+    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : inspect_screen_3(choice.get(), user_choices, frame))
     button.grid(row = 3, column = 0, sticky = N, pady = 2, padx = 10)
     entry.grid(row = 2, column = 0, sticky = N, pady = 2, padx = 10, ipady = 5)  
     
-def second_step_algorithm (mensagem, user_choices, frame): 
-    if verification(mensagem, user_choices) :
-        fourth_screen(root, frame, user_choices)
+def inspect_screen_3 (mensagem, user_choices, frame): 
+    if verification(mensagem, user_choices):
+        screen_4(root, frame, user_choices)
 
 
-## 4. Fourth Screen 
-##################################################################################
-def fourth_screen (root, old_frame, user_choices):
+# Screen 4
+def screen_4 (root, old_frame, user_choices):
     old_frame.destroy()
     cam   = "Camera"
     modem = "Modem"
@@ -138,7 +162,7 @@ def fourth_screen (root, old_frame, user_choices):
     label.grid(row = 0, column = 0, sticky = N, ipady = 10)
     choice = StringVar(frame, "")
 
-    button_0 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : third_step_algorithm(choice.get(), user_choices, frame))
+    button_0 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : inspect_screen_4(choice.get(), user_choices, frame))
     button_1 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = cam, variable = choice, value = cam)
     button_2 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = modem, variable = choice, value = modem)
     button_3 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = wsl, variable = choice, value = wsl)
@@ -150,14 +174,13 @@ def fourth_screen (root, old_frame, user_choices):
     button_3.grid(row = 3, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
     button_4.grid(row = 4, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
 
-def third_step_algorithm (mensagem, user_choices, frame): 
-    if verification(mensagem, user_choices) :
-        fifth_screen(root, frame, user_choices)
+def inspect_screen_4 (mensagem, user_choices, frame): 
+    if verification(mensagem, user_choices):
+        screen_5(root, frame, user_choices)
 
 
-## 5. Fifth Screen 
-##################################################################################
-def fifth_screen (root, old_frame, user_choices):
+# Screen 5
+def screen_5 (root, old_frame, user_choices):
     old_frame.destroy()
     ev   = "Event"
     sys = "System"
@@ -174,7 +197,7 @@ def fifth_screen (root, old_frame, user_choices):
     label.grid(row = 0, column = 0, sticky = N, ipady = 10)
     choice = StringVar(frame, "")
 
-    button_0 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : fouth_step_algorithm(choice.get(), user_choices, frame))
+    button_0 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : inspect_screen_5(choice.get(), user_choices, frame))
     button_1 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = ev, variable = choice, value = ev)
     button_2 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = sys, variable = choice, value = sys)
     button_3 = tk.Radiobutton(frame, background="#86acac", font = ("Courier", 14), text = main, variable = choice, value = main)
@@ -186,14 +209,15 @@ def fifth_screen (root, old_frame, user_choices):
     button_3.grid(row = 3, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
     button_4.grid(row = 4, column = 0, sticky = NW, pady = 2, padx = 10, ipady = 1)
 
-def fouth_step_algorithm (mensagem, user_choices, frame): 
-    if verification(mensagem, user_choices) :
-        sixth_screen(root, frame, user_choices)
+def inspect_screen_5 (mensagem, user_choices, frame): 
+    if verification(mensagem, user_choices):
+        dir = verification_target(user_choices)
+        if dir != None :
+            screen_6(root, frame, user_choices, dir)
 
 
-## 5. Sixth Screen 
-##################################################################################
-def sixth_screen (root, old_frame, user_choices):
+# Screen 6
+def screen_6 (root, old_frame, user_choices, dir):
     old_frame.destroy()
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
     frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
@@ -208,16 +232,17 @@ def sixth_screen (root, old_frame, user_choices):
     warning = Label(frame, text ='text file is the format required*', font = ("Courier", 10), background="#86acac") 
     warning.grid(row = 1, column = 0, sticky = NE)
 
-    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Choose File', command = lambda : open_file(root, frame, user_choices))
+    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Choose File', command = lambda : open_file(root, frame, user_choices, dir))
     button.grid(row = 2, column = 0, sticky = NW, pady = 2, padx = 10)
 
     print = user_choices
 
-def open_file(root, frame, user_choices):
+def open_file(root, frame, user_choices, dir):
     file_path = filedialog.askopenfile(mode='r', filetypes=[('Text files', '*txt')])
     if file_path is not None:
         try:
             copy(file_path.name, "../config/pids/logs.txt")
+            copy(file_path.name, "../config/" + dir + "target.txt")
             label_log = Label(frame, text = file_path.name, font = ("Courier", 10), background="#86acac") 
             label_log.grid(row = 5, column = 0, pady = 3, sticky = NE)
             pb = Progressbar(frame, orient=HORIZONTAL, length=300, mode='determinate')
@@ -226,7 +251,7 @@ def open_file(root, frame, user_choices):
                 frame.update_idletasks()
                 pb['value'] += 20
                 time.sleep(0.5)
-            command = "./saida.out 2"
+            command = "./program.out 2"
             stream = os.popen(command)
             output = stream.read()
             if "program error" in output:
@@ -291,7 +316,7 @@ def eigth_screen (root, old_frame, user_choices):
     entry.grid(row = 2, column = 0, sticky = N, pady = 2, padx = 10, ipady = 5) 
 
 def sixth_step_algorithm_part1 (mensagem, user_choices, frame):
-    command = "./saida.out 6 ../config/activities/"
+    command = "./program.out 6 ../config/activities/"
     for choice in user_choices:
         command = command + choice + "/"
     command = command + mensagem
@@ -362,7 +387,7 @@ def register_activity(root, frame, ck_var, user_choices, label, v_scroll):
             pids = pids + var_aux + ","
     pids = pids[:-1]
 
-    command = "./saida.out 4 " + path + " " + pids
+    command = "./program.out 4 " + path + " " + pids
     stream = os.popen(command)
     output = stream.read()
 
@@ -569,7 +594,7 @@ def eleven_screen (root, old_frame, user_choices):
 # Doing later
 def analyze_step_algorithm (mensagem, user_choices, frame): 
     if verification(mensagem, user_choices) :
-        sixth_screen(root, frame, user_choices)
+        finish_program(root, frame)
 
 # 8. Finish Screen
 def finish_program (root, old_frame):
@@ -595,7 +620,7 @@ def verification (mensagem, user_choices):
         for choice in user_choices :
             command_dir = command_dir + choice + "/"
         if messagebox.askyesno('pop-up information', 'You select: ' + msg) :
-            command = "./saida.out 1 " + command_dir
+            command = "./program.out 1 " + command_dir
             stream = os.popen(command)
             output = stream.read()
 
@@ -609,9 +634,27 @@ def verification (mensagem, user_choices):
     else:
         return False
 
+def verification_target (user_choices): 
+    command_dir = ""
+    for choice in user_choices :
+        command_dir = command_dir + choice + "/"
+    command_dir = command_dir + "target/"
+    command = "./program.out 1 " + command_dir
+    stream = os.popen(command)
+    output = stream.read()
+    if "program error" in output:
+        #must need to handle with the error, finish the program
+        messagebox.showerror('pop-up error', str(output))
+        #finish_program(root, frame)
+        #return False
+        #return True
+        return command_dir
+    else:
+        return None
+
 def finish(root, frame):
     root.destroy()
-    '''command = "./saida.out 0"
+    '''command = "./program.out 0"
     stream = os.popen(command)
     output = stream.read()
     if "program error" in output:
