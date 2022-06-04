@@ -52,9 +52,8 @@ def screen_1 (root, old_frame, user_choices):
     stream = os.popen(command)
     output = stream.read()
     if "program error" in output:
-        #must need to handle with the error, finish the program
         messagebox.showerror('pop-up error', str(output))
-        print(str(output))
+        finish_program (root, old_frame)
 
     old_frame.destroy()
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
@@ -242,7 +241,7 @@ def open_file(root, frame, user_choices, dir):
     if file_path is not None:
         try:
             copy(file_path.name, "../config/pids/logs.txt")
-            copy(file_path.name, "../config/" + dir + "target.txt")
+            copy(file_path.name, "../config/activities/" + dir + "target.txt")
             label_log = Label(frame, text = file_path.name, font = ("Courier", 10), background="#86acac") 
             label_log.grid(row = 5, column = 0, pady = 3, sticky = NE)
             pb = Progressbar(frame, orient=HORIZONTAL, length=300, mode='determinate')
@@ -255,9 +254,8 @@ def open_file(root, frame, user_choices, dir):
             stream = os.popen(command)
             output = stream.read()
             if "program error" in output:
-                #must need to handle with the error, finish the program
                 messagebox.showerror('pop-up error', str(output))
-                print(str(output))
+                finish_program (root, frame)
             else:
                 frame.update_idletasks()
                 pb['value'] += 20
@@ -265,17 +263,30 @@ def open_file(root, frame, user_choices, dir):
                 pb.destroy()
                 label = Label(frame, text='File Uploaded Successfully!', font = ("Courier", 10), background="#86acac")
                 label.grid(row = 4, column = 0, pady=10)
-                seventh_screen(root, frame, user_choices)
+                screen_7(root, frame, user_choices)
         except Exception: 
                 traceback.print_exc()
-                #must need to handle with the error, finish the program
-                print(str(output))
-                messagebox.showerror('pop-up error', "program error: Can not create a path: ../config/logs.txt\nprogram exit" )
+                messagebox.showerror('pop-up error', "program error: file path is None\nprogram exit" )
+                finish_program(root, frame)
+
+def verification_target (user_choices): 
+    command_dir = ""
+    for choice in user_choices :
+        command_dir = command_dir + choice + "/"
+    command_dir = command_dir + "target/"
+    command = "./program.out 1 " + command_dir
+    stream = os.popen(command)
+    output = stream.read()
+    if "program error" in output:
+        messagebox.showerror('pop-up error', str(output))
+        finish_program (root, frame)
+        return None
+    else:
+        return command_dir
 
 
-## 7. Seventh Screen 
-##################################################################################
-def seventh_screen (root, old_frame, user_choices):
+# Screen 7
+def screen_7 (root, old_frame, user_choices):
     old_frame.destroy()
 
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
@@ -287,15 +298,14 @@ def seventh_screen (root, old_frame, user_choices):
     label = Label(frame, text ='Would you like to do:', font = ("Courier", 18), background="#86acac") 
     label.grid(row = 0, column = 0, sticky = N, ipady = 10)
     
-    button_rg = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : eigth_screen(root, frame, user_choices))
+    button_rg = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : screen_8(root, frame, user_choices))
     button_rg.grid(row = 1, column = 0, sticky = W, pady = 2, padx = 10)
 
     button_an = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Analyze Activities', command = lambda : finish(root, frame))
     button_an.grid(row = 1, column = 0, sticky = E, pady = 2, padx = 10)
 
-## 8. Eigth Screen 
-##################################################################################
-def eigth_screen (root, old_frame, user_choices):
+# Screen 8
+def screen_8 (root, old_frame, user_choices):
     old_frame.destroy()
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
     frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
@@ -311,11 +321,11 @@ def eigth_screen (root, old_frame, user_choices):
 
     choice = StringVar(frame, "")
     entry = tk.Entry(frame, textvariable = choice, font=('calibre',10,'normal'))
-    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : sixth_step_algorithm_part1(choice.get(), user_choices, frame))
+    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : pop_up_screen_8(choice.get(), user_choices, frame))
     button.grid(row = 3, column = 0, sticky = N, pady = 2, padx = 10)
     entry.grid(row = 2, column = 0, sticky = N, pady = 2, padx = 10, ipady = 5) 
 
-def sixth_step_algorithm_part1 (mensagem, user_choices, frame):
+def pop_up_screen_8 (mensagem, user_choices, frame):
     command = "./program.out 6 ../config/activities/"
     for choice in user_choices:
         command = command + choice + "/"
@@ -325,21 +335,69 @@ def sixth_step_algorithm_part1 (mensagem, user_choices, frame):
 
     if "yes" in output:
         if messagebox.askyesno('pop-up information', 'Activity already registered\nWould you like regiter another way to same activity?') :
-            sixth_step_algorithm_part2 (mensagem, user_choices, frame)
+            inspect_screen_8 (mensagem, user_choices, frame)
         else :
-            finish_program (root, frame)
+            if verification (mensagem, user_choices):
+                screen_10 (root, frame, user_choices, None, None)
     elif "no" in output:
-        sixth_step_algorithm_part2 (mensagem, user_choices, frame)
+        inspect_screen_8 (mensagem, user_choices, frame)
     else :
         messagebox.showerror('pop-up error', 'Internal error occur')
         finish_program (root, frame)
 
-def sixth_step_algorithm_part2 (mensagem, user_choices, frame):
+def inspect_screen_8 (mensagem, user_choices, frame):
     if verification(mensagem, user_choices) :
-        ninth_screen(root, frame, user_choices)
+        screen_9(root, frame, user_choices)
 
-## 9. Ninth Screen 
-##################################################################################
+# Screen 9
+def screen_9 (root, old_frame, user_choices):
+    old_frame.destroy()
+    ck_var = []
+    count = 0
+
+    root.grid_rowconfigure(0, weight= 1)
+    root.grid_rowconfigure(1, weight= 0)
+
+    label = Label(root, text ='Choice the processor identifiers', font = ("Courier bold", 12), foreground="white", background="#86acac") 
+    label.grid(row = 2, column = 1, sticky = "e")
+
+    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
+    frame.grid(row = 2, column = 2, sticky = "sew")
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+    button = tk.Button(frame, text = 'Next', font = ("Courier", 12), command = lambda : register_activity(root, frame, ck_var, user_choices, label, v_scroll))
+    button.grid(row = 0, column = 1, sticky = "sew")
+    button = tk.Button(frame, text = 'Show pIDs choices', font = ("Courier", 12), command = lambda : show_choices(root, frame, ck_var))
+    button.grid(row = 0, column = 0, sticky = "sew")
+
+    v_scroll = ScrollableFrame(root)
+    v_scroll.grid(row = 0, column = 1, columnspan = 2, sticky = "nsew")
+
+    try:
+        file = open("../config/pids/info_file.txt", "r")
+    except:
+        messagebox.showerror('pop-up error', "program error: Can not create open a file: ../config/pids/info_file.txt\nprogram exit" )
+
+    line = file.readline()
+    if line[0] == ">" :
+        line = line[1:]
+        text_ck_button = line
+        line = file.readline()
+    else:
+        messagebox.showerror('pop-up error', "program error: File with wrong format: ../config/pids/info_file.txt\nprogram exit" )
+    
+    while line:
+        if line[0] == ">" :
+            ck_var.append(tk.StringVar(v_scroll, "-1"))
+            tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, font = ("Courier", 10), variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1", background="#86acaf").pack(side = tk.TOP, expand = True, fill = 'both')
+            count += 1
+            line = line[1:]
+            text_ck_button = line
+        else:
+            text_ck_button = text_ck_button + "\n" + line
+        line = file.readline()
+
+#Class ScrollableFrame implementation for:
 #https://blog.teclado.com/tkinter-scrollable-frames/
 class ScrollableFrame(Frame):
     def __init__(self, container, *args, **kwargs):
@@ -395,61 +453,17 @@ def register_activity(root, frame, ck_var, user_choices, label, v_scroll):
         messagebox.showerror('pop-up error', str(output))
         finish_program(root, frame)
     else:
-        tenth_screen (root, frame, user_choices, label, v_scroll)
+        screen_10 (root, frame, user_choices, label, v_scroll)
 
-def ninth_screen (root, old_frame, user_choices):
-    old_frame.destroy()
-    ck_var = []
-    count = 0
-
+# Screen 10
+def screen_10 (root, old_frame, user_choices, old_label, old_v_scroll):
     root.grid_rowconfigure(0, weight= 1)
     root.grid_rowconfigure(1, weight= 0)
 
-    label = Label(root, text ='Choice the processor identifiers', font = ("Courier bold", 12), foreground="white", background="#86acac") 
-    label.grid(row = 2, column = 1, sticky = "e")
-
-    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
-    frame.grid(row = 2, column = 2, sticky = "sew")
-    frame.grid_columnconfigure(0, weight=1)
-    frame.grid_columnconfigure(1, weight=1)
-    button = tk.Button(frame, text = 'Next', font = ("Courier", 12), command = lambda : register_activity(root, frame, ck_var, user_choices, label, v_scroll))
-    button.grid(row = 0, column = 1, sticky = "sew")
-    button = tk.Button(frame, text = 'Show pIDs choices', font = ("Courier", 12), command = lambda : show_choices(root, frame, ck_var))
-    button.grid(row = 0, column = 0, sticky = "sew")
-
-    v_scroll = ScrollableFrame(root)
-    v_scroll.grid(row = 0, column = 1, columnspan = 2, sticky = "nsew")
-
-    try:
-        file = open("../config/pids/info_file.txt", "r")
-    except:
-        messagebox.showerror('pop-up error', "program error: Can not create open a file: ../config/pids/info_file.txt\nprogram exit" )
-
-    line = file.readline()
-    if line[0] == ">" :
-        line = line[1:]
-        text_ck_button = line
-        line = file.readline()
-    else:
-        messagebox.showerror('pop-up error', "program error: File with wrong format: ../config/pids/info_file.txt\nprogram exit" )
-    
-    while line:
-        if line[0] == ">" :
-            ck_var.append(tk.StringVar(v_scroll, "-1"))
-            tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, font = ("Courier", 10), variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1", background="#86acaf").pack(side = tk.TOP, expand = True, fill = 'both')
-            count += 1
-            line = line[1:]
-            text_ck_button = line
-        else:
-            text_ck_button = text_ck_button + "\n" + line
-        line = file.readline()
-
-## 10. Tenth Screen 
-##################################################################################
-def tenth_screen (root, old_frame, user_choices, old_label, old_v_scroll) :
     old_frame.destroy()
-    old_label.destroy()
-    old_v_scroll.destroy()
+    if old_label is not None and old_v_scroll is not None:
+        old_label.destroy()
+        old_v_scroll.destroy()
 
     path = "../config/activities/"
     for choice in user_choices:
@@ -465,7 +479,7 @@ def tenth_screen (root, old_frame, user_choices, old_label, old_v_scroll) :
     frame.grid_rowconfigure(1, weight=0)
     frame.grid_rowconfigure(2, weight=1)
 
-    label = Label(frame, text ='The operation was registered:', font = ("Courier", 18), background="#86acac") 
+    label = Label(frame, text ='Activity registered:', font = ("Courier", 18), background="#86acac") 
     label.grid(row = 0, column = 0, sticky = N, ipady = 10)
     
     frame_button = tk.LabelFrame(frame, relief = FLAT, background="#86acac")
@@ -479,7 +493,7 @@ def tenth_screen (root, old_frame, user_choices, old_label, old_v_scroll) :
     button_2 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), text = 'Show dir tree graph', command = lambda : print_activity_paths(path, user_choices))
     button_2.grid(row = 1, column = 1, sticky = "nsew", pady = 2, padx = 10)
 
-    button_3 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Next', command = lambda : eleven_screen(root, frame, user_choices))
+    button_3 = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Next', command = lambda : finish_program(root, frame))
     button_3.grid(row = 1, column = 1, sticky = "nsew", pady = 2, padx = 10)
 
 def print_activity_paths(path, user_choices):
@@ -553,12 +567,13 @@ def activity_paths(path, flag, names, numbers, edges) :
     ret.append(edges)
     return ret
 
+#list_files implementation for:
 #https://stackoverflow.com/questions/9727673/list-directory-tree-structure-in-python
 def list_files(root, frame, startpath):
     listbox = Listbox(frame)
     scrollbar = Scrollbar(frame)
-    listbox.grid(row = 2, column = 0, sticky = "nsew")
-    scrollbar.grid(row = 2, column = 0, sticky = "nse")
+    listbox.grid(row = 2, column = 0, columnspan = 2, sticky = "nsew")
+    scrollbar.grid(row = 2, column = 0, columnspan = 2, sticky = "nse")
 
     for root, dirs, files in os.walk(startpath):
         level = root.replace(startpath, '', 1).count(os.sep)
@@ -569,10 +584,29 @@ def list_files(root, frame, startpath):
     listbox.config(yscrollcommand = scrollbar.set)
     scrollbar.config(command = listbox.yview)
 
+# Common Analyze Step Function
+def verification (mensagem, user_choices): 
+    mensagem = str(mensagem.lower())
+    msg = "".join(c for c in mensagem if c.isalnum())
+    if msg  != "" :
+        command_dir = ""
+        user_choices.append(msg)
+        for choice in user_choices :
+            command_dir = command_dir + choice + "/"
+        if messagebox.askyesno('pop-up information', 'You select: ' + msg) :
+            command = "./program.out 1 " + command_dir
+            stream = os.popen(command)
+            output = stream.read()
 
-## 7. Eleven Screen 
-##################################################################################
-def eleven_screen (root, old_frame, user_choices):
+            if "program error" in output:
+                messagebox.showerror('pop-up error', str(output))
+                finish_program (root, frame)
+        return True
+    else:
+        return False
+
+# Screen 11
+def screen_11 (root, old_frame, user_choices):
     old_frame.destroy()
 
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
@@ -584,7 +618,7 @@ def eleven_screen (root, old_frame, user_choices):
     label = Label(frame, text ='Would you like to do:', font = ("Courier", 18), background="#86acac") 
     label.grid(row = 0, column = 0, sticky = N, ipady = 10)
     
-    button_rg = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : eigth_screen(root, frame, user_choices))
+    button_rg = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : finish(root, frame, user_choices))
     button_rg.grid(row = 1, column = 0, sticky = W, pady = 2, padx = 10)
 
     button_an = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Analyze Activities', command = lambda : finish(root, frame))
@@ -607,50 +641,6 @@ def finish_program (root, old_frame):
 
     button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Finish program', command = lambda : finish(root, frame))
     button.grid(row = 1, column = 0, sticky = N, pady = 2, padx = 10)
-
-
-# Common Functions 
-##################################################################################
-def verification (mensagem, user_choices): 
-    mensagem = str(mensagem.lower())
-    msg = "".join(c for c in mensagem if c.isalnum())
-    if msg  != "" :
-        command_dir = ""
-        user_choices.append(msg)
-        for choice in user_choices :
-            command_dir = command_dir + choice + "/"
-        if messagebox.askyesno('pop-up information', 'You select: ' + msg) :
-            command = "./program.out 1 " + command_dir
-            stream = os.popen(command)
-            output = stream.read()
-
-            if "program error" in output:
-                #must need to handle with the error, finish the program
-                messagebox.showerror('pop-up error', str(output))
-                #finish_program(root, frame)
-                #return False
-                #return True
-        return True
-    else:
-        return False
-
-def verification_target (user_choices): 
-    command_dir = ""
-    for choice in user_choices :
-        command_dir = command_dir + choice + "/"
-    command_dir = command_dir + "target/"
-    command = "./program.out 1 " + command_dir
-    stream = os.popen(command)
-    output = stream.read()
-    if "program error" in output:
-        #must need to handle with the error, finish the program
-        messagebox.showerror('pop-up error', str(output))
-        #finish_program(root, frame)
-        #return False
-        #return True
-        return command_dir
-    else:
-        return None
 
 def finish(root, frame):
     root.destroy()
