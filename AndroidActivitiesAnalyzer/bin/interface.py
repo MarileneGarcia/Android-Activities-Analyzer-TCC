@@ -42,7 +42,7 @@ frame.grid_columnconfigure(2, weight=1)
 label = tk.Label(frame, relief = FLAT, text ='Do you want to start Android Activities Analyzer', font = ("Courier", 18), background="#86acac") 
 label.grid(row = 0, column = 0, sticky = N, ipady = 10)
 
-button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : screen_12(root, frame, user_choices))
+button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : screen_1(root, frame, user_choices))
 button.grid(row = 1, column = 0)
 
 # Screen 1
