@@ -43,7 +43,7 @@ frame.grid_columnconfigure(2, weight=1)
 label = tk.Label(frame, relief = FLAT, text ='Do you want to start Android Activities Analyzer', font = ("Courier", 18), background="#86acac") 
 label.grid(row = 0, column = 0, sticky = N, ipady = 10)
 
-button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : screen_1(root, frame, user_choices))
+button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Begin', command = lambda : screen_12(root, frame, user_choices))
 button.grid(row = 1, column = 0)
 
 # Screen 1
@@ -260,6 +260,8 @@ def open_file(root, frame, user_choices, dir):
                 frame.update_idletasks()
                 pb['value'] += 20
                 time.sleep(1)
+                frame.update_idletasks()
+                time.sleep(0.5)
                 pb.destroy()
                 label = Label(frame, text='File Uploaded Successfully!', font = ("Courier", 10), background="#86acac")
                 label.grid(row = 4, column = 0, pady=10)
@@ -301,7 +303,7 @@ def screen_7 (root, old_frame, user_choices):
     button_rg = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : screen_8(root, frame, user_choices))
     button_rg.grid(row = 1, column = 0, sticky = W, pady = 2, padx = 10)
 
-    button_an = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Analyze Activities', command = lambda : finish(root, frame))
+    button_an = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Analyze Activities', command = lambda : screen_11(root, frame, user_choices))
     button_an.grid(row = 1, column = 0, sticky = E, pady = 2, padx = 10)
 
 # Screen 8
@@ -593,7 +595,7 @@ def verification (mensagem, user_choices):
         user_choices.append(msg)
         for choice in user_choices :
             command_dir = command_dir + choice + "/"
-        if messagebox.askyesno('pop-up information', 'You select: ' + msg) :
+        if messagebox.askyesno('pop-up information', 'You select: ' + msg):
             command = "./program.out 1 " + command_dir
             stream = os.popen(command)
             output = stream.read()
@@ -615,20 +617,125 @@ def screen_11 (root, old_frame, user_choices):
     frame.grid_columnconfigure(1, weight=1)
     frame.grid_columnconfigure(2, weight=1)
 
-    label = Label(frame, text ='Would you like to do:', font = ("Courier", 18), background="#86acac") 
+    label = Label(frame, text ='Searching for match activities:', font = ("Courier", 18), background="#86acac") 
+    label.grid(row = 0, column = 0, sticky = N, ipady = 10)
+    log_file = StringVar(frame, "")
+
+    warning = Label(frame, text ='the search happens in all registered activities of this path*', font = ("Courier", 10), background="#86acac") 
+    warning.grid(row = 1, column = 0, sticky = NE)
+
+    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Start search', command = lambda : screen_11_search(root, frame, user_choices))
+    button.grid(row = 2, column = 0, sticky = NW, pady = 2, padx = 10)
+
+    print = user_choices
+
+def screen_11_search(root, frame, user_choices):
+    path = "../config/activities/"
+    for choice in user_choices:
+        path = path + choice + "/"
+
+    pb = Progressbar(frame, orient=HORIZONTAL, length=300, mode='determinate')
+    pb.grid(row = 4, column = 0, pady=20)
+    for i in range(4):
+        frame.update_idletasks()
+        pb['value'] += 20
+        time.sleep(0.5)
+
+    command = "./program.out 5 " + path
+    stream = os.popen(command)
+    output = stream.read()
+
+    path_2 = "../results/"
+    command_2 = "ls -l " + path_2 + " | grep ^d | wc -l"
+    stream_2 = os.popen(command_2)
+    output_2 = stream_2.read()
+
+    if "program error" in output:
+        if messagebox.askyesno('pop-up information', 'There is no registered activity in: ' + path + '\nWould you like register this one?'):
+            screen_8(root, frame, user_choices)
+        else:
+            finish_program(root, frame)
+    
+    elif "0" in output_2:
+        if messagebox.askyesno('pop-up information', 'There is no match activity in: ' + path + '\nWould you like register this logs as a new activity?'):
+            screen_8(root, frame, user_choices)
+        else:
+            finish_program(root, frame)
+    else:
+        frame.update_idletasks()
+        pb['value'] += 20
+        time.sleep(1)
+        frame.update_idletasks()
+        time.sleep(0.5)
+        pb.destroy()
+        screen_12(root, frame, user_choices)
+
+# Screen 12
+def screen_12 (root, old_frame, user_choices):
+    old_frame.destroy()
+
+    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
+    frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+    frame.grid_columnconfigure(2, weight=1)
+
+    frame.grid_rowconfigure(0, weight=0)
+    frame.grid_rowconfigure(1, weight=0)
+    frame.grid_rowconfigure(2, weight=1)
+
+    label = Label(frame, text ='Match Activities:', font = ("Courier", 18), background="#86acac") 
     label.grid(row = 0, column = 0, sticky = N, ipady = 10)
     
-    button_rg = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : finish(root, frame, user_choices))
-    button_rg.grid(row = 1, column = 0, sticky = W, pady = 2, padx = 10)
+    file = open("../results/results.txt", "r")
+    listbox = tk.Listbox(frame)
+    scrollbar = Scrollbar(frame)
+    listbox.grid(row = 2, column = 0, columnspan = 1, sticky = "nsew")
+    scrollbar.grid(row = 2, column = 0, columnspan = 1, sticky = "nse")
 
-    button_an = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Analyze Activities', command = lambda : finish(root, frame))
-    button_an.grid(row = 1, column = 0, sticky = E, pady = 2, padx = 10)
+    line_number = 0
+    click_lines = []
+    for line in file:
+        line = line. rstrip('\n')
+        if "match" in line:
+            listbox.insert(line_number, line.split(" is")[0])
+            listbox.itemconfig(line_number, {'bg':'green', 'fg':'white'})
+            click_lines.append(line_number)
+            line_number += 1
+        if "%" in line:
+            listbox.insert(line_number, line)
+            listbox.itemconfig(line_number, {'fg':'green'})
+            line_number += 1
+    file.close()
+    
+    label_select = Label(frame, text ='Click and select a line for more details', font = ("Courier", 18), background="#86acac") 
+    label_select.grid(row = 3, column = 0, sticky = N, ipady = 10)
 
+    warning = Label(frame, text ='only the lines with background green are available to be select*', font = ("Courier", 10), background="#86acac") 
+    warning.grid(row = 4, column = 0, sticky = NE)
 
-# Doing later
-def analyze_step_algorithm (mensagem, user_choices, frame): 
-    if verification(mensagem, user_choices) :
-        finish_program(root, frame)
+    button_select = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : screen_13(root, frame, user_choices))
+    button_select.grid(row = 5, column = 0, sticky = "nsew", pady = 2, padx = 10)
+    
+    listbox.config(yscrollcommand = scrollbar.set)
+    scrollbar.config(command = listbox.yview)
+
+# Screen 13
+def screen_13 (root, old_frame, user_choices):
+    old_frame.destroy()
+
+    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
+    frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+    frame.grid_columnconfigure(2, weight=1)
+
+    frame.grid_rowconfigure(0, weight=0)
+    frame.grid_rowconfigure(1, weight=0)
+    frame.grid_rowconfigure(2, weight=1)
+
+    label = Label(frame, text ='Match Activities:', font = ("Courier", 18), background="#86acac") 
+    label.grid(row = 0, column = 0, sticky = N, ipady = 10)
 
 # 8. Finish Screen
 def finish_program (root, old_frame):
