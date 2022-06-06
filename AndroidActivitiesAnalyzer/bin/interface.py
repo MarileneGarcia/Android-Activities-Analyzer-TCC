@@ -445,16 +445,20 @@ def register_activity(root, frame, ck_var, user_choices, label, v_scroll):
         if "-1" not in var_aux:
             pids = pids + var_aux + ","
     pids = pids[:-1]
+    
+    if(pids != ""):
+        command = "./program.out 4 " + path + " " + pids
+        stream = os.popen(command)
+        output = stream.read()
 
-    command = "./program.out 4 " + path + " " + pids
-    stream = os.popen(command)
-    output = stream.read()
-
-    if "program error" in output:
-        messagebox.showerror('pop-up error', str(output))
-        finish_program(root, frame)
+        if "program error" in output:
+            messagebox.showerror('pop-up error', str(output))
+            finish_program(root, frame)
+        else:
+            screen_10 (root, frame, user_choices, label, v_scroll)
     else:
-        screen_10 (root, frame, user_choices, label, v_scroll)
+        messagebox.showwarning('pop-up warning', 'Please, select at least one pid')
+
 
 # Screen 10
 def screen_10 (root, old_frame, user_choices, old_label, old_v_scroll):
@@ -832,6 +836,7 @@ def screen_13_scroll (root, frame, user_choices, str, button):
 
 # Screen 14
 def finish_program (root, old_frame):
+    user_choices = []
     old_frame.destroy()
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
     frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
