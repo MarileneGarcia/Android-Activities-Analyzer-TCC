@@ -291,19 +291,22 @@ def screen_7 (root, old_frame, user_choices):
     old_frame.destroy()
 
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
-    frame.grid(row = 0, column = 1, columnspan = 2, sticky = tk.NSEW)
+    frame.grid(row = 0, column = 1, columnspan = 2, sticky = "nsew")
     frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, weight=1)
     frame.grid_columnconfigure(2, weight=1)
 
     label = Label(frame, text ='Would you like to do:', font = ("Courier", 18), background="#86acac") 
-    label.grid(row = 0, column = 0, sticky = N, ipady = 10)
+    label.grid(row = 0, column = 0, sticky = "nsew", ipady = 10)
     
-    button_rg = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : screen_8(root, frame, user_choices))
-    button_rg.grid(row = 1, column = 0, sticky = W, pady = 2, padx = 10)
+    frame_button = tk.LabelFrame(frame, relief = FLAT, background="#86acac")
+    frame_button.grid(row = 1, column = 0, columnspan = 2, sticky = "nsew")
 
-    button_an = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Analyze Activities', command = lambda : screen_11(root, frame, user_choices))
-    button_an.grid(row = 1, column = 0, sticky = E, pady = 2, padx = 10)
+    button_rg = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), text = 'Register Activity', command = lambda : screen_8(root, frame, user_choices))
+    button_rg.grid(row = 1, column = 0, sticky = "nsew", pady = 2, padx = 10)
+
+    button_an = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), text = 'Analyze Activities', command = lambda : screen_11(root, frame, user_choices))
+    button_an.grid(row = 1, column = 1, sticky = "nsew", pady = 2, padx = 10)
 
 # Screen 8
 def screen_8 (root, old_frame, user_choices):
