@@ -784,6 +784,9 @@ def screen_13 (root, old_frame, user_choices, message):
     button_4 = tk.Button(frame, background="#86acac", font = ("Courier", 14), width=20, text = 'Next', command = lambda : finish_program (root, frame))
     button_4.grid(row = 1, column = 1, sticky = N, pady = 2, padx = 5)
 
+    button_5 = tk.Button(frame, background="#86acac", font = ("Courier", 14), width=20, text = 'Back', command = lambda : screen_12 (root, frame, user_choices))
+    button_5.grid(row = 2, column = 1, sticky = N, pady = 2, padx = 5)
+
 def screen_13_scroll (root, frame, user_choices, str, button):
     str = str.replace(" ", "")
     str = str.split(":")

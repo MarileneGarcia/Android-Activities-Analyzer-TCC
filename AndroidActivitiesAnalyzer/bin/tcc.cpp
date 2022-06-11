@@ -357,7 +357,7 @@ bool TidFunctions(vector<Pid>& pids){
  * @return {vector<string>} the funcions
  */
 vector<string> pick_functions(string dir, string tid_id){
-    string str = "awk '{print (substr($6, length($6), 1) != \":\") ? $6 : substr($6, 1, length($6)-1) }' " + dir + tid_id + ".txt" + "| sort -u > " + dir + "info.txt";
+    string str = "tr -s \" \" < " + dir + tid_id + ".txt | " + "awk '{print (substr($6, length($6), 1) != \":\") ? $6 : substr($6, 1, length($6)-1) }' | sort -u > " + dir + "info.txt";
     const char *command = str.c_str();
     if(system(command)){         
         cout << "program error: can not select funcions of: "<< dir << tid_id << ".txt" << endl;
@@ -385,29 +385,22 @@ vector<string> FunctionsDirectory(string dir, string tid_id){
     string function, function_aux, str;
     const char *command;
     vector<string> functions, vec_name;
-    file.open(dir+"info.txt");
 
+    file.open(dir+"info.txt");
     if(file.is_open()){        
         while(getline(file, function)){
-            if (function.find('/') != string::npos){
-                vec_name = split_character(function, '/');
-                function_aux = "";
-                for(string name : vec_name){
-                    function_aux = function_aux + "_" + name;
-                }
-            } else if (!regex_match(function,regex("^[a-zA-Z0-9_.-]*$"))) {
-                function_aux = function;
-                function_aux = regex_replace(function_aux, regex("[^0-9a-zA-Z]+"), "");
-            } else {
-                function_aux = function;
+            if (function == ""){
+                function = "blank_space_error";
             }
+            function_aux = regex_replace(function, regex("[^0-9a-zA-Z]+"), "_");
+
             str = "mkdir " + dir + function_aux;
             command = str.c_str();
             apply_command(command);
             
-            str = "grep " + function + " " + dir + tid_id + ".txt > " + dir + function_aux + "/" + function_aux + ".txt";
+            str = "grep -iF \"" + function + "\" " + dir + tid_id + ".txt > " + dir + function_aux + "/" + function_aux + ".txt";
             command = str.c_str();
-            apply_command(command);
+            system(command);
 
             str = "tr -s \" \" < " + dir + function_aux + "/" + function_aux + ".txt | cut -d \" \" -f 5- > " + dir + function_aux + "/info.txt && rm -rf " + dir + function_aux + "/" + function_aux + ".txt";
             command = str.c_str();
@@ -720,8 +713,8 @@ void apply_command(const char *command){
 /**
  * CompareFile
  * 
- * Compare the target file with all the other activities 
- * already registered in the directory
+ * Compare the target file with all the other 
+ * activities already registered in the directory
  * @param  {string} directory of activities
  * @return {bool} true or false
  */
@@ -822,33 +815,51 @@ bool CompareFile(string dir){
  * AnalizeZipSize
  * 
  * Compare the target file with the activity 
- * using the size of zip
+ * file size of compression of both as parameter
  * @param  {string} directory of the activity
  * @return {double} percentage of match
  */
 double AnalizeZipSize(string dir){
-    string str = "zip " + dir + "log.zip " + dir + "log.txt && zip " + dir + "log_target.zip " + dir + "log_target.txt";
+    string str = "tar -jPcf " + dir + "log.tar " + dir + "log.txt";
     const char *command = str.c_str();
     apply_command(command);
 
-    double size_log, size_log_target, percentage;
+    str = "tar -jPcf " + dir + "log_target.tar " + dir + "log_target.txt";
+    command = str.c_str();
+    apply_command(command);
+
+    str = "tar -JPcf " + dir + "both.tar " + dir + "log.txt " + dir + "log_target.txt";
+    command = str.c_str();
+    apply_command(command);
+
+    double size_log, size_log_target, size_both, percentage;
     string str_aux;
 
-    str = "ls -l " + dir + "log.zip | tr -s \" \" | cut -d \" \" -f 5 | tr -d \"\n\"";
+    str = "ls -l " + dir + "both.tar | tr -s \" \" | cut -d \" \" -f 5 | tr -d \"\n\"";
+    str_aux = GetStdoutFromCommand(str);
+    size_both = stod(str_aux);
+
+    str = "ls -l " + dir + "log.tar | tr -s \" \" | cut -d \" \" -f 5 | tr -d \"\n\"";
     str_aux = GetStdoutFromCommand(str);
     size_log = stod(str_aux);
 
-    str = "ls -l " + dir + "log_target.zip | tr -s \" \" | cut -d \" \" -f 5 | tr -d \"\n\"";
+    str = "ls -l " + dir + "log_target.tar | tr -s \" \" | cut -d \" \" -f 5 | tr -d \"\n\"";
     str_aux = GetStdoutFromCommand(str);
     size_log_target = stod(str_aux);
 
     if(size_log_target >= size_log){
-        percentage = (1 - ((size_log_target - size_log)/size_log_target))*100;
+        if(size_both > size_log)
+            percentage = (1 - ((size_both - size_log)/size_log_target))*100;
+        else
+            percentage = (1 - ((size_log - size_both)/size_log_target))*100;
     } else {
-        percentage = (1 - ((size_log - size_log_target)/size_log))*100;
+        if(size_both > size_log_target)
+            percentage = (1 - ((size_both - size_log_target)/size_log))*100;
+        else
+            percentage = (1 - ((size_log_target - size_both)/size_log))*100;  
     }
 
-    str = "rm -rf " + dir + "log.zip && rm -rf " + dir + "log_target.zip";
+    str = "rm -rf " + dir + "log.tar && rm -rf " + dir + "log_target.tar && rm -rf " + dir + "both.tar";
     command = str.c_str();
     apply_command(command);
     
