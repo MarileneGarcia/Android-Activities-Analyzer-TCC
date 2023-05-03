@@ -34,8 +34,15 @@
 #include <regex>
 #include <sys/stat.h>
 #include <algorithm>
+#include <unordered_set>
 
 using namespace std;
+
+/* The functions of each pid */
+typedef struct Functions_pid{
+    int pid;   
+    vector<string> functions;
+} Functions_pid;
 
 /* The message of each log */
 typedef struct Message{

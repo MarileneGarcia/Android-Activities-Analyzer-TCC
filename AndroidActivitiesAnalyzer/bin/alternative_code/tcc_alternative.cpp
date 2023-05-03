@@ -312,7 +312,7 @@ bool PidsTidsDirectories(vector<Pid>& pids, string log_file){
             cout << "program exit" << endl;
             exit(0);
         } else {
-            grep = "grep ' " + pid_id + " ' " + log_file + " > " + dir + pid_id + "/" + pid_id + ".txt";
+            grep = "tr -s \" \" < " + log_file + " | grep -E '[0-9] " + pid_id + " [0-9]+ [V,D,I,W,E,F,S] ' > " + dir + pid_id + "/" + pid_id + ".txt";
             command = grep.c_str();
             if(system(command)){        
                 cout << "program error: can not create a pid file: "<< pid.get_pid() << endl;
@@ -331,7 +331,7 @@ bool PidsTidsDirectories(vector<Pid>& pids, string log_file){
                 exit(0);
             }
             else {
-                grep = "grep ' " + tid_id + " ' " + dir + pid_id + "/" + pid_id + ".txt" + " > " + dir + pid_id + "/" + tid_id + "/" + tid_id + ".txt";
+                grep = "tr -s \" \" < " + dir + pid_id + "/" + pid_id + ".txt" + " | grep ' " + tid_id + " [V,D,I,W,E,F,S] ' > " + dir + pid_id + "/" + tid_id + "/" + tid_id + ".txt";
                 command = grep.c_str();
                 if(system(command)){        
                     cout << "program error: can not create a pid file: "<< pid.get_pid() << endl;
@@ -530,10 +530,14 @@ void CreateFileAllInformation(vector<Pid>& pids){
     int flag = 0;
     ofstream file("../../config/pids/info_file.txt");
     ofstream file_aux("../../config/pids/info_file_aux.txt");
+    ofstream file_no_tids("../../config/pids/info_file_without_tids.txt");
+
+    Functions_pid functions;
     for(Pid pid : pids){
-        file << ">" << pid.get_pid() << ": ";
-        file_aux << ">" << pid.get_pid() << ": ";
-        
+        functions.pid = pid.get_pid();
+        file << ">" << functions.pid << ": ";
+        file_aux << ">" << functions.pid << ": ";
+    
         for(Tid tid: pid.get_tids()){
             file << "[" << tid.get_tid()<< ": ";
             file_aux << "[" << tid.get_tid()<< ": ";
@@ -542,6 +546,7 @@ void CreateFileAllInformation(vector<Pid>& pids){
             vector<string>::iterator ptr;
             flag = 0;
             for(ptr = it.begin(); ptr < it.end(); ptr++){
+                functions.functions.push_back(*ptr);
                 flag += 1;
                 if(flag >= 2 && ptr != it.end()-1){
                     file << endl;
@@ -556,10 +561,31 @@ void CreateFileAllInformation(vector<Pid>& pids){
                 }       
             }
         }
+        file_no_tids << ">" << functions.pid << ": ";
+        sort(functions.functions.begin(), functions.functions.end());
+        functions.functions.erase(unique(functions.functions.begin(), functions.functions.end()), functions.functions.end());
+
+        int size_func = 0;
+        int it = 0;
+        for(string func : functions.functions){
+            it += 1;
+            size_func += func.size();
+            if(it < functions.functions.size()){
+                file_no_tids << func << ",";
+                if(size_func > 40){
+                    size_func = 0;
+                    file_no_tids << endl;
+                }
+            } else {
+               file_no_tids << func << endl; 
+            }  
+        }
         file_aux << endl;
+        functions.functions.clear();
     }
     file.close();
 }
+
 
 /**
  * CreateActivityDirectory

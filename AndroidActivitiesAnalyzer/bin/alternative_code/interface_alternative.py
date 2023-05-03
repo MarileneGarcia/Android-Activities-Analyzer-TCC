@@ -18,6 +18,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+MAXIMUM_FILE_LINES = 200
+
 
 #################### Import Modules ###################
 from tkinter import * 
@@ -32,6 +34,7 @@ import os
 import time
 import traceback
 from igraph import *
+import linecache
 
 ################# Building screens #####################
 
@@ -68,6 +71,9 @@ button.grid(row = 1, column = 0)
 
 # Screens 1,2,3,4,5
 def screens_1_2_3_4_5 (root, old_frame):
+    global path_activity
+    path_activity = ""
+
     command = "./program.out 0"
     stream = os.popen(command)
     output = stream.read()
@@ -206,7 +212,6 @@ def screen_8 (root, old_frame):
 def pop_up_screen_8 (mensagem, frame):
     global path_activity
     command = "./program.out 6 "+ path_activity + mensagem
-    print(command)
     stream = os.popen(command)
     output = stream.read()
 
@@ -233,9 +238,81 @@ def inspect_screen_8 (mensagem, frame):
         finish(root, frame)
 
 # Screen 9
+num_items = 0
+iteractions = 0
+
 def screen_9 (root, old_frame):
     old_frame.destroy()
+    count = 0
     ck_var = []
+
+    global num_items
+    global iteractions
+    iteractions = 0
+
+    try:
+        file = open("../../config/pids/info_file_without_tids.txt", "r", encoding="ISO-8859-1")
+    except:
+        messagebox.showerror('pop-up error', "program error: Can not create open a file: ../../config/pids/info_file_without_tids.txt\nprogram exit" )
+        finish_program (root, frame)
+    
+    line = file.readline()
+    num_items += 1
+    iteractions += 1
+
+    root.grid_rowconfigure(0, weight= 1)
+    root.grid_rowconfigure(1, weight= 0)
+
+    label = Label(root, text ='Choice the processor identifiers', font = ("Courier bold", 12), foreground="white", background="#86acac") 
+    label.grid(row = 2, column = 1, sticky = "e")
+
+    frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
+    frame.grid(row = 2, column = 2, sticky = "sew")
+    frame.grid_columnconfigure(0, weight=1)
+    frame.grid_columnconfigure(1, weight=1)
+    button = tk.Button(frame, text = 'Next', font = ("Courier", 12), command = lambda : screen_9_decision(root, frame, ck_var, label, v_scroll, file, line))
+    button.grid(row = 0, column = 1, sticky = "sew")
+    button = tk.Button(frame, text = 'Show pIDs choices', font = ("Courier", 12), command = lambda : show_choices(root, frame, ck_var))
+    button.grid(row = 0, column = 0, sticky = "sew")
+
+    v_scroll = ScrollableFrame(root)
+    v_scroll.grid(row = 0, column = 1, columnspan = 2, sticky = "nsew")
+
+    if line[0] == ">" :
+        line = line[1:]
+        text_ck_button = line
+        line = file.readline()
+    else:
+        messagebox.showerror('pop-up error', "program error: File with wrong format: ../../config/pids/info_file_without_tids.txt\nprogram exit" )
+        finish_program (root, frame)
+
+    while line :
+        if line[0] == ">" :
+            ck_var.append(tk.StringVar(v_scroll, "-1"))
+            tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, font = ("Courier", 10), variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1", background="#86acaf").pack(side = tk.TOP, expand = True, fill = 'both', padx = (8, 0))
+            
+            if iteractions > MAXIMUM_FILE_LINES  :
+                break
+            
+            count += 1
+
+            line = line[1:]
+            text_ck_button = line
+        else:
+            text_ck_button = text_ck_button + "\n" + line
+
+        line = file.readline()
+        num_items += 1
+        iteractions += 1
+    
+    ck_var.append(tk.StringVar(v_scroll, "-1"))
+    tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, font = ("Courier", 10), variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1", background="#86acaf").pack(side = tk.TOP, expand = True, fill = 'both', padx = (8, 0))
+    
+    if(iteractions <= MAXIMUM_FILE_LINES):
+        iteractions = -1
+
+def screen_9_split_screens (root, frame, ck_var, label, v_scroll, file, line):
+    frame.destroy()
     count = 0
 
     root.grid_rowconfigure(0, weight= 1)
@@ -248,7 +325,7 @@ def screen_9 (root, old_frame):
     frame.grid(row = 2, column = 2, sticky = "sew")
     frame.grid_columnconfigure(0, weight=1)
     frame.grid_columnconfigure(1, weight=1)
-    button = tk.Button(frame, text = 'Next', font = ("Courier", 12), command = lambda : register_activity(root, frame, ck_var, label, v_scroll))
+    button = tk.Button(frame, text = 'Next', font = ("Courier", 12), command = lambda : screen_9_decision(root, frame, ck_var, label, v_scroll, file, line))
     button.grid(row = 0, column = 1, sticky = "sew")
     button = tk.Button(frame, text = 'Show pIDs choices', font = ("Courier", 12), command = lambda : show_choices(root, frame, ck_var))
     button.grid(row = 0, column = 0, sticky = "sew")
@@ -256,31 +333,59 @@ def screen_9 (root, old_frame):
     v_scroll = ScrollableFrame(root)
     v_scroll.grid(row = 0, column = 1, columnspan = 2, sticky = "nsew")
 
-    try:
-        file = open("../../config/pids/info_file.txt", "r")
-    except:
-        messagebox.showerror('pop-up error', "program error: Can not create open a file: ../../config/pids/info_file.txt\nprogram exit" )
-        finish_program (root, frame)
+    global num_items
+    global iteractions
+    iteractions = 0
 
-    line = file.readline()
+    #line = file.readline()
+    num_items += 1
+    iteractions += 1
+    text_ck_button = line
+
     if line[0] == ">" :
         line = line[1:]
         text_ck_button = line
         line = file.readline()
     else:
-        messagebox.showerror('pop-up error', "program error: File with wrong format: ../../config/pids/info_file.txt\nprogram exit" )
+        messagebox.showerror('pop-up error', "program error: File with wrong format: ../../config/pids/info_file_without_tids.txt\nprogram exit" )
         finish_program (root, frame)
     
-    while line:
+    while line :
         if line[0] == ">" :
             ck_var.append(tk.StringVar(v_scroll, "-1"))
-            tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, font = ("Courier", 10), variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1", background="#86acaf").pack(side = tk.TOP, expand = True, fill = 'both')
+            tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, font = ("Courier", 10), variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1", background="#86acaf").pack(side = tk.TOP, expand = True, fill = 'both', padx = (8, 0))
+            if iteractions > MAXIMUM_FILE_LINES  :
+                break
+            
             count += 1
             line = line[1:]
             text_ck_button = line
         else:
             text_ck_button = text_ck_button + "\n" + line
+
         line = file.readline()
+        num_items += 1
+        iteractions += 1
+
+        if(iteractions > 3*MAXIMUM_FILE_LINES):
+            messagebox.showerror('pop-up error', "program error: exist a pid with more lines than can be rendered, please exclude it and try again. Thanks" )
+            finish_program (root, frame)
+
+    ck_var.append(tk.StringVar(v_scroll, "-1"))
+    tk.Checkbutton(v_scroll.scrollable_frame, text = text_ck_button, font = ("Courier", 10), variable = ck_var[count], onvalue = text_ck_button.split(":")[0], offvalue = "-1", background="#86acaf").pack(side = tk.TOP, expand = True, fill = 'both', padx = (8, 0))
+
+    if(iteractions <= MAXIMUM_FILE_LINES):
+        iteractions = -1
+
+def screen_9_decision (root, frame, ck_var, label, v_scroll, file, line):
+    if iteractions == -1 :
+        global num_items
+        num_items = 0
+
+        register_activity(root, frame, ck_var, label, v_scroll)
+    else:
+        screen_9_split_screens (root, frame, ck_var, label, v_scroll, file, line)
+
 
 #Class ScrollableFrame implementation for:
 #https://blog.teclado.com/tkinter-scrollable-frames/
@@ -323,7 +428,6 @@ def register_activity(root, frame, ck_var, label, v_scroll):
     global path_activity
     path = "../../config/activities/" + path_activity
 
-    print("path" + path)
     for var in ck_var:
         var_aux = str(var.get())
         if "-1" not in var_aux:
@@ -385,7 +489,7 @@ def screen_10 (root, old_frame, old_label, old_v_scroll):
     button_3.grid(row = 1, column = 1, sticky = "nsew", pady = 2, padx = 10)
 
 # Screen 11
-def screen_11 (root, old_frame, user_choices):
+def screen_11 (root, old_frame):
     old_frame.destroy()
 
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
@@ -401,15 +505,14 @@ def screen_11 (root, old_frame, user_choices):
     warning = Label(frame, text ='the search happens in all registered activities of this path*', font = ("Courier", 10), background="#86acac") 
     warning.grid(row = 1, column = 0, sticky = NE)
 
-    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Start search', command = lambda : screen_11_search(root, frame, user_choices))
+    button = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Start search', command = lambda : screen_11_search(root, frame))
     button.grid(row = 2, column = 0, sticky = NW, pady = 2, padx = 10)
 
-    print = user_choices
 
-def screen_11_search(root, frame, user_choices):
+def screen_11_search(root, frame):
+    global path_activity
     path = "../../config/activities/"
-    for choice in user_choices:
-        path = path + choice + "/"
+    path += path_activity
 
     pb = Progressbar(frame, orient=HORIZONTAL, length=300, mode='determinate')
     pb.grid(row = 4, column = 0, pady=20)
@@ -429,13 +532,13 @@ def screen_11_search(root, frame, user_choices):
 
     if "program error" in output:
         if messagebox.askyesno('pop-up information', 'There is no registered activity in: ' + path + '\nWould you like register this one?'):
-            screen_8(root, frame, user_choices)
+            screen_8(root, frame)
         else:
             finish_program(root, frame)
     
     elif "0" in output_2:
         if messagebox.askyesno('pop-up information', 'There is no match activity in: ' + path + '\nWould you like register this logs as a new activity?'):
-            screen_8(root, frame, user_choices)
+            screen_8(root, frame)
         else:
             finish_program(root, frame)
     else:
@@ -445,10 +548,10 @@ def screen_11_search(root, frame, user_choices):
         frame.update_idletasks()
         time.sleep(0.5)
         pb.destroy()
-        screen_12(root, frame, user_choices)
+        screen_12(root, frame)
 
 # Screen 12
-def screen_12 (root, old_frame, user_choices):
+def screen_12 (root, old_frame):
     old_frame.destroy()
 
     frame = tk.LabelFrame(root, relief = FLAT, background="#86acac")
@@ -494,26 +597,26 @@ def screen_12 (root, old_frame, user_choices):
     warning = Label(frame, text ='only the lines with background green are available to be select*', font = ("Courier", 10), background="#86acac") 
     warning.grid(row = 4, column = 0, sticky = NE)
 
-    button_select = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : verification_screen_12(root, frame, user_choices, click_lines, listbox.curselection(), listbox))
+    button_select = tk.Button(frame, background="#86acac", font = ("Courier", 14), text = 'Select', command = lambda : verification_screen_12(root, frame, click_lines, listbox.curselection(), listbox))
     button_select.grid(row = 5, column = 0, sticky = "nsew", pady = 2, padx = 10)
     
     listbox.config(yscrollcommand = scrollbar.set)
     scrollbar.config(command = listbox.yview)
 
-def verification_screen_12 (root, frame, user_choices, right_lines, select_line, listbox):
+def verification_screen_12 (root, frame, right_lines, select_line, listbox):
     if select_line != ():
         if select_line[0] in right_lines:
             message = listbox.get(select_line[0])
             if messagebox.askyesno('pop-up information', 'You select:\n' + message):
-                screen_13(root, frame, user_choices, message)
+                screen_13(root, frame, message)
             else:
-                screen_12(root, frame, user_choices)
+                screen_12(root, frame)
         else:
             messagebox.showwarning('pop-up warning', 'Please, select a line with green background')
-            screen_12(root, frame, user_choices)
+            screen_12(root, frame)
 
 # Screen 13
-def screen_13 (root, old_frame, user_choices, message):
+def screen_13 (root, old_frame, message):
     old_frame.destroy()
     root.grid_rowconfigure(0, weight= 1)
     root.grid_rowconfigure(1, weight= 0)
@@ -539,26 +642,26 @@ def screen_13 (root, old_frame, user_choices, message):
 
     label_1 = Label(frame_button, text ='*filtro unique lines', font = ("Courier", 10), background="#86acac") 
     label_1.grid(row = 2, column = 0, sticky = NW, ipady = 10)
-    button_1 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), width=20, text = 'Filter 1', command = lambda : screen_13_scroll (root, frame, user_choices, message, 0))
+    button_1 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), width=20, text = 'Filter 1', command = lambda : screen_13_scroll (root, frame, message, 0))
     button_1.grid(row = 1, column = 0, sticky = NW, pady = 2, padx = 5)
 
     label_2 = Label(frame_button, text ='*filtro unique lines\n without consider hexadecimal values', font = ("Courier", 10), background="#86acac") 
     label_2.grid(row = 2, column = 1, sticky = NW, ipady = 10)
-    button_2 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), width=20, text = 'Filter 2', command = lambda : screen_13_scroll (root, frame, user_choices, message, 1))
+    button_2 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), width=20, text = 'Filter 2', command = lambda : screen_13_scroll (root, frame, message, 1))
     button_2.grid(row = 1, column = 1, sticky = NW, pady = 2, padx = 5)
 
     label_3 = Label(frame_button, text ='*filtro unique lines\n without consider numerical values', font = ("Courier", 10), background="#86acac") 
     label_3.grid(row = 2, column = 2, sticky = NW, ipady = 10)
-    button_3 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), width=20, text = 'Filter 3', command = lambda : screen_13_scroll (root, frame, user_choices, message, 2))
+    button_3 = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), width=20, text = 'Filter 3', command = lambda : screen_13_scroll (root, frame, message, 2))
     button_3.grid(row = 1, column = 2, sticky = NW, pady = 2, padx = 5)
 
     button_4 = tk.Button(frame, background="#86acac", font = ("Courier", 14), width=20, text = 'Next', command = lambda : finish_program (root, frame))
     button_4.grid(row = 1, column = 1, sticky = N, pady = 2, padx = 5)
 
-    button_5 = tk.Button(frame, background="#86acac", font = ("Courier", 14), width=20, text = 'Back', command = lambda : screen_12 (root, frame, user_choices))
+    button_5 = tk.Button(frame, background="#86acac", font = ("Courier", 14), width=20, text = 'Back', command = lambda : screen_12 (root, frame))
     button_5.grid(row = 2, column = 1, sticky = N, pady = 2, padx = 5)
 
-def screen_13_scroll (root, frame, user_choices, str, button):
+def screen_13_scroll (root, frame, str, button):
     str = str.replace(" ", "")
     str = str.split(":")
     dir = "../../results/" + str[0] + "/" + str[1] + "/"
@@ -626,7 +729,7 @@ def finish_program (root, old_frame):
     button = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), text = 'Finish program', command = lambda : finish(root, frame))
     button.grid(row = 1, column = 0, sticky = NE, pady = 2, padx = 10)
 
-    button = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), text = 'Return to begin', command = lambda : screen_1 (root, frame))
+    button = tk.Button(frame_button, background="#86acac", font = ("Courier", 14), text = 'Return to begin', command = lambda : screens_1_2_3_4_5(root, frame))
     button.grid(row = 1, column = 1, sticky = NW, pady = 2, padx = 10)
 
 def finish(root, frame):
@@ -717,7 +820,6 @@ def verification (usr_path):
 
     if usr_path  != "" :
         command = "./program.out 1 " + path_activity
-        print("p1"+command)
         stream = os.popen(command)
         output = stream.read()
 
@@ -733,7 +835,6 @@ def verification (usr_path):
 
 def verification_target (): 
     global path_activity
-    print(path_activity)
 
     command_dir = path_activity + "target/"
     command = "./program.out 1 " + command_dir
